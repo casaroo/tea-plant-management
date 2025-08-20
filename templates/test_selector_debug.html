@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>茶树选择器调试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"></script>
+    <script src="/static/tea-plant-selector.js"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">茶树选择器调试</h1>
+        
+        <!-- 调试信息 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">调试信息</h2>
+            <div id="debugInfo" class="space-y-2 text-sm">
+                <p>正在加载...</p>
+            </div>
+        </div>
+        
+        <!-- 茶树选择器 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">茶树选择器</h2>
+            <div class="flex flex-wrap gap-3">
+                <select id="areaSelector" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <option value="all">所有区域</option>
+                    <option value="A">A区</option>
+                    <option value="B">B区</option>
+                    <option value="C">C区</option>
+                </select>
+                
+                <select id="plantSelector" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 min-w-64">
+                    <option value="">请选择茶树</option>
+                </select>
+                
+                <button id="refreshBtn" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <i class="fa fa-refresh mr-2"></i>刷新
+                </button>
+            </div>
+        </div>
+        
+        <!-- 选中的茶树信息 -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">选中的茶树信息</h2>
+            <div id="selectedPlantInfo" class="text-gray-500">
+                请选择茶树以查看信息
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 调试信息
+        function updateDebugInfo(message) {
+            const debugInfo = document.getElementById('debugInfo');
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.innerHTML += `<p>[${timestamp}] ${message}</p>`;
+        }
+
+        // 茶树选择器初始化
+        let teaPlantSelector;
+        
+        try {
+            updateDebugInfo('正在初始化茶树选择器...');
+            
+            teaPlantSelector = new TeaPlantSelector({
+                onPlantChange: function(plantId) {
+                    updateDebugInfo(`茶树选择改变: ${plantId}`);
+                    if (plantId) {
+                        displaySelectedPlant(plantId);
+                    } else {
+                        document.getElementById('selectedPlantInfo').innerHTML = '请选择茶树以查看信息';
+                    }
+                },
+                onRefresh: function() {
+                    updateDebugInfo('刷新茶树数据');
+                    if (teaPlantSelector.currentPlantId) {
+                        displaySelectedPlant(teaPlantSelector.currentPlantId);
+                    }
+                }
+            });
+            
+            updateDebugInfo('茶树选择器初始化成功');
+            
+            // 显示所有茶树数据
+            setTimeout(() => {
+                updateDebugInfo(`茶树选择器状态: currentPlantId=${teaPlantSelector.currentPlantId}`);
+                updateDebugInfo(`所有茶树数量: ${teaPlantSelector.allPlants.length}`);
+                updateDebugInfo(`筛选后的茶树数量: ${teaPlantSelector.getFilteredPlants().length}`);
+                
+                // 显示前几个茶树的信息
+                teaPlantSelector.allPlants.slice(0, 3).forEach((plant, index) => {
+                    updateDebugInfo(`茶树${index + 1}: ID=${plant.id}, 品种=${plant.variety}, 区域=${plant.location_area}, 行=${plant.location_row}`);
+                });
+            }, 1000);
+            
+        } catch (error) {
+            updateDebugInfo(`茶树选择器初始化失败: ${error.message}`);
+            console.error('茶树选择器初始化失败:', error);
+        }
+
+        // 显示选中的茶树信息
+        async function displaySelectedPlant(plantId) {
+            try {
+                updateDebugInfo(`正在获取茶树 ${plantId} 的信息...`);
+                
+                const response = await fetch(`/api/tea-plants/${plantId}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    updateDebugInfo(`获取茶树信息失败: ${data.error}`);
+                    return;
+                }
+                
+                const plant = data.plant;
+                const location = plant.location_area && plant.location_row 
+                    ? `${plant.location_area}区${plant.location_row}` 
+                    : (plant.location || '未知位置');
+                
+                document.getElementById('selectedPlantInfo').innerHTML = `
+                    <div class="space-y-2">
+                        <p><strong>ID:</strong> ${plant.id}</p>
+                        <p><strong>品种:</strong> ${plant.variety}</p>
+                        <p><strong>位置:</strong> ${location}</p>
+                        <p><strong>当前阶段:</strong> ${plant.current_stage}</p>
+                        <p><strong>树高:</strong> ${plant.height}m</p>
+                        <p><strong>冠幅:</strong> ${plant.crown_width}m</p>
+                    </div>
+                `;
+                
+                updateDebugInfo(`茶树信息显示成功`);
+                
+            } catch (error) {
+                updateDebugInfo(`获取茶树信息失败: ${error.message}`);
+                console.error('获取茶树信息失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>

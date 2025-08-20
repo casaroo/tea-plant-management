@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>施肥记录管理 - 茶叶生长模型系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 导航栏 -->
+    <nav class="bg-green-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-leaf text-2xl"></i>
+                <h1 class="text-xl font-bold">茶叶生长模型系统</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="/" class="hover:text-green-200 transition-colors duration-300">首页</a>
+                <a href="/tea-plants" class="hover:text-green-200 transition-colors duration-300">茶树管理</a>
+                <a href="/environmental-data" class="hover:text-green-200 transition-colors duration-300">环境监测</a>
+                <a href="/growth-model" class="hover:text-green-200 transition-colors duration-300">生长模型</a>
+                <a href="/weather-warning" class="hover:text-green-200 transition-colors duration-300">天气预警</a>
+                <a href="/fertilizer-recommendation" class="hover:text-green-200 transition-colors duration-300">施肥推荐</a>
+                <a href="/pest-management" class="hover:text-green-200 transition-colors duration-300">病虫害管理</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <div class="mb-8">
+            <nav class="text-sm breadcrumbs mb-4">
+                <ol class="flex items-center space-x-2 text-gray-500">
+                    <li><a href="/" class="hover:text-green-600">首页</a></li>
+                    <li><i class="fa fa-chevron-right text-xs"></i></li>
+                    <li><a href="/tea-plants" class="hover:text-green-600">茶树管理</a></li>
+                    <li><i class="fa fa-chevron-right text-xs"></i></li>
+                    <li class="text-gray-700">施肥记录</li>
+                </ol>
+            </nav>
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">施肥记录管理</h1>
+                    <p class="text-gray-600 mt-2">茶树：{{ plant.variety }} ({{ plant.location_area }}-{{ plant.location_row }})</p>
+                </div>
+                <button id="addRecordBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors duration-300 flex items-center space-x-2">
+                    <i class="fa fa-plus"></i>
+                    <span>添加施肥记录</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">总施肥次数</p>
+                        <p id="totalRecords" class="text-2xl font-bold text-gray-800">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fa fa-tint text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">上次施肥</p>
+                        <p id="lastFertilization" class="text-2xl font-bold text-gray-800">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fa fa-calendar text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">本月施肥</p>
+                        <p id="monthlyRecords" class="text-2xl font-bold text-gray-800">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <i class="fa fa-bar-chart text-yellow-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">平均间隔</p>
+                        <p id="averageInterval" class="text-2xl font-bold text-gray-800">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fa fa-clock-o text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 施肥记录列表 -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">施肥记录</h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">施肥日期</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">肥料类型</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">施肥量(kg)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">养分含量</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">施肥方法</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作人</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- 记录将通过JavaScript动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- 添加施肥记录模态框 -->
+    <div id="addRecordModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-90vh overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-semibold text-gray-800">添加施肥记录</h3>
+                        <button id="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors duration-300">
+                            <i class="fa fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <form id="fertilizerForm" class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">肥料类型 *</label>
+                            <select id="fertilizerType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                <option value="">请选择肥料类型</option>
+                                <option value="复合肥">复合肥</option>
+                                <option value="有机肥">有机肥</option>
+                                <option value="尿素">尿素</option>
+                                <option value="磷酸二铵">磷酸二铵</option>
+                                <option value="硫酸钾">硫酸钾</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">施肥量(kg) *</label>
+                            <input type="number" id="amount" step="0.1" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">氮含量(%)</label>
+                            <input type="number" id="nitrogenContent" step="0.1" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">磷含量(%)</label>
+                            <input type="number" id="phosphorusContent" step="0.1" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">钾含量(%)</label>
+                            <input type="number" id="potassiumContent" step="0.1" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">施肥方法 *</label>
+                            <select id="method" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                <option value="">请选择施肥方法</option>
+                                <option value="根部施肥">根部施肥</option>
+                                <option value="叶面喷施">叶面喷施</option>
+                                <option value="沟施">沟施</option>
+                                <option value="穴施">穴施</option>
+                                <option value="撒施">撒施</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">天气状况</label>
+                            <select id="weatherCondition" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">请选择天气状况</option>
+                                <option value="晴天">晴天</option>
+                                <option value="多云">多云</option>
+                                <option value="阴天">阴天</option>
+                                <option value="小雨">小雨</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">土壤湿度(%)</label>
+                            <input type="number" id="soilMoisture" step="0.1" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">操作人 *</label>
+                            <input type="text" id="operator" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">备注</label>
+                            <textarea id="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-4 mt-8">
+                        <button type="button" id="cancelBtn" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-300">
+                            取消
+                        </button>
+                        <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300">
+                            保存记录
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const plantId = parseInt('{{ plant.id }}');
+        let records = [];
+
+        // 页面加载时获取数据
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFertilizationRecords();
+        });
+
+        // 加载施肥记录
+        async function loadFertilizationRecords() {
+            try {
+                const response = await fetch(`/api/fertilization-records/${plantId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    records = data.records;
+                    updateStatistics();
+                    renderRecordsTable();
+                } else {
+                    console.error('加载施肥记录失败:', data.error);
+                }
+            } catch (error) {
+                console.error('网络错误:', error);
+            }
+        }
+
+        // 更新统计信息
+        function updateStatistics() {
+            document.getElementById('totalRecords').textContent = records.length;
+            
+            if (records.length > 0) {
+                // 最后施肥时间
+                const lastRecord = records[0];
+                const lastDate = new Date(lastRecord.timestamp);
+                document.getElementById('lastFertilization').textContent = 
+                    `${Math.floor((Date.now() - lastDate) / (1000 * 60 * 60 * 24))}天前`;
+
+                // 本月施肥次数
+                const currentMonth = new Date().getMonth();
+                const monthlyCount = records.filter(record => 
+                    new Date(record.timestamp).getMonth() === currentMonth
+                ).length;
+                document.getElementById('monthlyRecords').textContent = monthlyCount;
+
+                // 平均间隔
+                if (records.length > 1) {
+                    const firstDate = new Date(records[records.length - 1].timestamp);
+                    const lastDate = new Date(records[0].timestamp);
+                    const avgInterval = Math.floor((lastDate - firstDate) / (1000 * 60 * 60 * 24) / (records.length - 1));
+                    document.getElementById('averageInterval').textContent = `${avgInterval}天`;
+                } else {
+                    document.getElementById('averageInterval').textContent = '-';
+                }
+            } else {
+                document.getElementById('lastFertilization').textContent = '无记录';
+                document.getElementById('monthlyRecords').textContent = '0';
+                document.getElementById('averageInterval').textContent = '-';
+            }
+        }
+
+        // 渲染记录表格
+        function renderRecordsTable() {
+            const tbody = document.getElementById('recordsTableBody');
+            
+            if (records.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fa fa-inbox text-4xl mb-4 block"></i>
+                            <p>暂无施肥记录</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = records.map(record => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${new Date(record.timestamp).toLocaleDateString()}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${record.fertilizer_type}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${record.amount}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        N:${record.nitrogen_content || 0}% 
+                        P:${record.phosphorus_content || 0}% 
+                        K:${record.potassium_content || 0}%
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${record.method}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${record.operator}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editRecord(${record.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fa fa-edit"></i> 编辑
+                        </button>
+                        <button onclick="deleteRecord(${record.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fa fa-trash"></i> 删除
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 模态框控制
+        const modal = document.getElementById('addRecordModal');
+        const addBtn = document.getElementById('addRecordBtn');
+        const closeBtn = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        addBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
+
+        [closeBtn, cancelBtn].forEach(btn => {
+            btn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+                document.getElementById('fertilizerForm').reset();
+            });
+        });
+
+        // 表单提交
+        document.getElementById('fertilizerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                tea_plant_id: plantId,
+                fertilizer_type: document.getElementById('fertilizerType').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                nitrogen_content: parseFloat(document.getElementById('nitrogenContent').value) || 0,
+                phosphorus_content: parseFloat(document.getElementById('phosphorusContent').value) || 0,
+                potassium_content: parseFloat(document.getElementById('potassiumContent').value) || 0,
+                method: document.getElementById('method').value,
+                weather_condition: document.getElementById('weatherCondition').value,
+                soil_moisture: parseFloat(document.getElementById('soilMoisture').value) || 0,
+                operator: document.getElementById('operator').value,
+                notes: document.getElementById('notes').value
+            };
+
+            try {
+                const response = await fetch('/api/fertilization-records', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('施肥记录添加成功！');
+                    modal.classList.add('hidden');
+                    document.getElementById('fertilizerForm').reset();
+                    loadFertilizationRecords();
+                } else {
+                    alert('添加失败：' + result.error);
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+                console.error('Error:', error);
+            }
+        });
+
+        // 删除记录
+        async function deleteRecord(recordId) {
+            if (!confirm('确定要删除这条施肥记录吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/fertilization-records/${recordId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('记录删除成功！');
+                    loadFertilizationRecords();
+                } else {
+                    alert('删除失败：' + result.error);
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+                console.error('Error:', error);
+            }
+        }
+
+        // 编辑记录（简化版，可以扩展）
+        function editRecord(recordId) {
+            alert('编辑功能正在开发中...');
+        }
+    </script>
+</body>
+</html>

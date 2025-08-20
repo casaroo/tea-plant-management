@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>施肥智能推荐 - 茶叶生长模型系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 导航栏 -->
+    <nav class="bg-green-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-leaf text-2xl"></i>
+                <h1 class="text-xl font-bold">茶叶生长模型系统</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="/" class="hover:text-green-200 transition-colors duration-300">首页</a>
+                <a href="/tea-plants" class="hover:text-green-200 transition-colors duration-300">茶树管理</a>
+                <a href="/environmental-data" class="hover:text-green-200 transition-colors duration-300">环境监测</a>
+                <a href="/growth-model" class="hover:text-green-200 transition-colors duration-300">生长模型</a>
+                <a href="/weather-warning" class="hover:text-green-200 transition-colors duration-300">天气预警</a>
+                <a href="/fertilizer-recommendation" class="hover:text-green-200 transition-colors duration-300 font-medium border-b-2 border-green-300 pb-1">施肥推荐</a>
+                <a href="/pest-management" class="hover:text-green-200 transition-colors duration-300">病虫害管理</a>
+            </div>
+            <button class="md:hidden text-white focus:outline-none">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 移动端菜单 -->
+    <div class="md:hidden bg-green-700 hidden">
+        <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+            <a href="/" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">首页</a>
+            <a href="/tea-plants" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">茶树管理</a>
+            <a href="/environmental-data" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">环境监测</a>
+            <a href="/growth-model" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">生长模型</a>
+            <a href="/weather-warning" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">天气预警</a>
+            <a href="/fertilizer-recommendation" class="text-white bg-green-600 px-2 py-1 rounded transition-colors duration-300">施肥推荐</a>
+            <a href="/pest-management" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">病虫害管理</a>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <section class="mb-8">
+            <h2 class="text-[clamp(1.5rem,3vw,2.2rem)] font-bold text-gray-800 mb-2">茶园施肥智能分析与决策</h2>
+            <p class="text-gray-600">
+                基于土壤养分状况和茶树生长需求，精准推荐施肥种类、用量和时期，
+                实现科学施肥，提高茶叶品质和产量，减少资源浪费和环境污染。
+            </p>
+        </section>
+
+        <!-- 土壤养分状况 -->
+        <section class="mb-10">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">当前土壤养分状况</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="h-64">
+                            <canvas id="soil-nutrients-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">有机质</span>
+                                <span class="text-sm font-medium text-gray-700">3.2%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-green-600 h-2.5 rounded-full" style="width: 75%"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">处于适宜范围（2.0-5.0%）</p>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">氮 (N)</span>
+                                <span class="text-sm font-medium text-gray-700">28 mg/kg</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: 56%"></div>
+                            </div>
+                            <p class="text-xs text-yellow-500 mt-1">略低于适宜范围（30-60 mg/kg）</p>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">磷 (P)</span>
+                                <span class="text-sm font-medium text-gray-700">12 mg/kg</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-purple-600 h-2.5 rounded-full" style="width: 40%"></div>
+                            </div>
+                            <p class="text-xs text-red-500 mt-1">低于适宜范围（15-30 mg/kg）</p>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">钾 (K)</span>
+                                <span class="text-sm font-medium text-gray-700">22 mg/kg</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-yellow-600 h-2.5 rounded-full" style="width: 55%"></div>
+                            </div>
+                            <p class="text-xs text-yellow-500 mt-1">略低于适宜范围（20-40 mg/kg）</p>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">pH值</span>
+                                <span class="text-sm font-medium text-gray-700">5.2</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-green-600 h-2.5 rounded-full" style="width: 80%"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">处于适宜范围（4.5-6.0）</p>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">土壤湿度</span>
+                                <span class="text-sm font-medium text-gray-700">62%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-teal-600 h-2.5 rounded-full" style="width: 62%"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">处于适宜范围（50-70%）</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 施肥推荐 -->
+        <section class="mb-10">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">智能施肥推荐方案</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="border border-blue-100 rounded-lg p-6 bg-blue-50">
+                        <div class="flex justify-between items-start mb-4">
+                            <h4 class="font-semibold text-blue-800">氮肥推荐</h4>
+                            <i class="fa fa-flask text-blue-500 text-xl"></i>
+                        </div>
+                        <div class="text-center mb-4">
+                            <span class="text-4xl font-bold text-blue-600" id="nitrogen-amount">3.2</span>
+                            <span class="text-gray-600"> kg/亩</span>
+                        </div>
+                        <div class="bg-white rounded-lg p-3">
+                            <p class="text-sm text-gray-700">推荐肥料：尿素（含氮46%）或硫酸铵（含氮21%）</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-purple-100 rounded-lg p-6 bg-purple-50">
+                        <div class="flex justify-between items-start mb-4">
+                            <h4 class="font-semibold text-purple-800">磷肥推荐</h4>
+                            <i class="fa fa-flask text-purple-500 text-xl"></i>
+                        </div>
+                        <div class="text-center mb-4">
+                            <span class="text-4xl font-bold text-purple-600" id="phosphorus-amount">4.5</span>
+                            <span class="text-gray-600"> kg/亩</span>
+                        </div>
+                        <div class="bg-white rounded-lg p-3">
+                            <p class="text-sm text-gray-700">推荐肥料：过磷酸钙（含磷12-18%）或磷酸二铵</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-yellow-100 rounded-lg p-6 bg-yellow-50">
+                        <div class="flex justify-between items-start mb-4">
+                            <h4 class="font-semibold text-yellow-800">钾肥推荐</h4>
+                            <i class="fa fa-flask text-yellow-500 text-xl"></i>
+                        </div>
+                        <div class="text-center mb-4">
+                            <span class="text-4xl font-bold text-yellow-600" id="potassium-amount">2.8</span>
+                            <span class="text-gray-600"> kg/亩</span>
+                        </div>
+                        <div class="bg-white rounded-lg p-3">
+                            <p class="text-sm text-gray-700">推荐肥料：氯化钾（含钾60%）或硫酸钾（含钾50%）</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                    <h4 class="font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fa fa-info-circle text-blue-500 mr-2"></i> 施肥建议详情
+                    </h4>
+                    <ul class="space-y-3 text-gray-700" id="fertilizer-suggestions">
+                        <!-- 建议内容将通过JavaScript动态填充 -->
+                    </ul>
+                    
+                    <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <h5 class="font-medium text-green-800 mb-2">最佳施肥时间</h5>
+                        <p class="text-green-700" id="best-time">根据气象预报，建议在未来3天内（5月15日前）完成施肥，避开雨天。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 施肥效果预测 -->
+        <section class="mb-10">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">施肥效果预测</h3>
+                
+                <div class="h-80">
+                    <canvas id="fertilizer-effect-chart"></canvas>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div class="border border-gray-200 rounded-lg p-5">
+                        <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                            <i class="fa fa-line-chart text-green-600 mr-2"></i> 生长改善预测
+                        </h4>
+                        <ul class="space-y-2 text-gray-700">
+                            <li class="flex items-start">
+                                <i class="fa fa-arrow-up text-green-500 mt-1 mr-2"></i>
+                                <span>预计茶树高度增长速度提升 15-20%</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-arrow-up text-green-500 mt-1 mr-2"></i>
+                                <span>叶片数量和质量将在2-3周内明显改善</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-arrow-up text-green-500 mt-1 mr-2"></i>
+                                <span>光合作用效率提高，养分吸收能力增强</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg p-5">
+                        <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                            <i class="fa fa-leaf text-green-600 mr-2"></i> 品质提升预测
+                        </h4>
+                        <ul class="space-y-2 text-gray-700">
+                            <li class="flex items-start">
+                                <i class="fa fa-arrow-up text-green-500 mt-1 mr-2"></i>
+                                <span>茶多酚含量预计提升 8-12%</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-arrow-up text-green-500 mt-1 mr-2"></i>
+                                <span>氨基酸含量预计提升 5-8%</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-arrow-up text-green-500 mt-1 mr-2"></i>
+                                <span>整体品质评分预计提高 0.5-1.0 分</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 施肥历史记录 -->
+        <section class="mb-10">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800">施肥历史记录</h3>
+                    <button onclick="goToFertilizationRecords()" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors duration-300 text-sm">
+                        <i class="fa fa-plus mr-1"></i> 记录新施肥
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">氮肥 (kg/亩)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">磷肥 (kg/亩)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">钾肥 (kg/亩)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">肥料类型</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">执行人</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fertilizationRecordsTable" class="bg-white divide-y divide-gray-200">
+                            <!-- 施肥记录将通过JavaScript动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fa fa-leaf mr-2"></i>茶叶生长模型系统
+                    </h3>
+                    <p class="text-gray-400">
+                        利用先进的数据分析和人工智能技术，为茶园管理提供全方位的智能解决方案，
+                        助力茶叶产业高质量发展。
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">快速链接</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white transition-colors duration-300">首页</a></li>
+                        <li><a href="/growth-model" class="text-gray-400 hover:text-white transition-colors duration-300">生长模型</a></li>
+                        <li><a href="/weather-warning" class="text-gray-400 hover:text-white transition-colors duration-300">天气预警</a></li>
+                        <li><a href="/fertilizer-recommendation" class="text-gray-400 hover:text-white transition-colors duration-300">施肥推荐</a></li>
+                        <li><a href="/pest-management" class="text-gray-400 hover:text-white transition-colors duration-300">病虫害管理</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">联系我们</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-envelope mr-2"></i> contact@teagrowthsystem.com
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-phone mr-2"></i> +86 123 4567 8910
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-map-marker mr-2"></i> 中国茶叶研究所
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500">
+                <p>&copy; 2023 茶叶生长模型系统 版权所有</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 移动端菜单切换
+        document.querySelector('.fa-bars').parentElement.addEventListener('click', function() {
+            document.querySelector('.md\\:hidden.bg-green-700').classList.toggle('hidden');
+        });
+
+        // 绘制土壤养分雷达图
+        const soilCtx = document.getElementById('soil-nutrients-chart').getContext('2d');
+        new Chart(soilCtx, {
+            type: 'radar',
+            data: {
+                labels: ['氮 (N)', '磷 (P)', '钾 (K)', '有机质', 'pH值', '土壤湿度'],
+                datasets: [
+                    {
+                        label: '当前值',
+                        data: [56, 40, 55, 75, 80, 62],
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
+                    },
+                    {
+                        label: '适宜值',
+                        data: [70, 60, 70, 80, 80, 70],
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(255, 99, 132, 1)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+
+        // 获取施肥推荐数据
+        fetch('/api/fertilizer-recommendation?plant_id=1')
+            .then(response => response.json())
+            .then(data => {
+                // 更新推荐施肥量
+                document.getElementById('nitrogen-amount').textContent = data.nitrogen.toFixed(1);
+                document.getElementById('phosphorus-amount').textContent = data.phosphorus.toFixed(1);
+                document.getElementById('potassium-amount').textContent = data.potassium.toFixed(1);
+                
+                // 更新施肥建议
+                const suggestionsList = document.getElementById('fertilizer-suggestions');
+                suggestionsList.innerHTML = '';
+                
+                data.suggestions.forEach(suggestion => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-start';
+                    li.innerHTML = `
+                        <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                        <span>${suggestion}</span>
+                    `;
+                    suggestionsList.appendChild(li);
+                });
+            });
+
+        // 加载施肥记录
+        async function loadFertilizationRecords() {
+            try {
+                // 获取第一个茶树的施肥记录作为示例
+                const response = await fetch('/api/fertilization-records/1');
+                const data = await response.json();
+                
+                const tbody = document.getElementById('fertilizationRecordsTable');
+                
+                if (data.records.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                <i class="fa fa-inbox text-4xl mb-4 block"></i>
+                                <p>暂无施肥记录</p>
+                                <p class="text-sm mt-2">点击"记录新施肥"添加第一条记录</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = data.records.slice(0, 5).map(record => `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${new Date(record.timestamp).toLocaleDateString()}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${record.nitrogen_content || 0}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${record.phosphorus_content || 0}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${record.potassium_content || 0}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${record.fertilizer_type}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${record.operator}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('加载施肥记录失败:', error);
+                const tbody = document.getElementById('fertilizationRecordsTable');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fa fa-exclamation-triangle text-4xl mb-4 block"></i>
+                            <p>加载施肥记录失败</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // 跳转到施肥记录管理页面
+        function goToFertilizationRecords() {
+            window.location.href = '/fertilization-records/1';
+        }
+
+        // 页面加载时获取施肥记录
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFertilizationRecords();
+        });
+
+        // 绘制施肥效果预测图表
+        const effectCtx = document.getElementById('fertilizer-effect-chart').getContext('2d');
+        new Chart(effectCtx, {
+            type: 'line',
+            data: {
+                labels: ['当前', '1周后', '2周后', '3周后', '4周后', '6周后', '8周后'],
+                datasets: [
+                    {
+                        label: '实施推荐施肥',
+                        data: [100, 105, 112, 120, 130, 145, 160],
+                        borderColor: '#4BC0C0',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: '常规施肥',
+                        data: [100, 102, 105, 108, 112, 118, 125],
+                        borderColor: '#FF6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: '茶树生长指数预测 (相对值)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: '生长指数'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

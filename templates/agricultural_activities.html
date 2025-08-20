@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>农事活动记录</title>
+</head>
+<body>
+    <h1>{{ plant.variety }}的农事活动记录</h1>
+    <p>品种: {{ plant.variety }}</p>
+    <p>种植日期: {{ plant.planting_date }}</p>
+    <p>当前阶段: {{ plant.current_stage }}</p>
+
+    <h2>农事活动列表</h2>
+    <table border="1">
+        <tr>
+            <th>时间</th>
+            <th>活动类型</th>
+            <th>描述</th>
+            <th>使用材料</th>
+            <th>执行人</th>
+        </tr>
+        {% for activity in activities %}
+        <tr>
+            <td>{{ activity.timestamp }}</td>
+            <td>{{ activity.activity_type }}</td>
+            <td>{{ activity.description }}</td>
+            <td>{{ activity.materials_used }}</td>
+            <td>{{ activity.执行人 }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

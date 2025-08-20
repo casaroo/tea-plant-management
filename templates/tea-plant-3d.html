@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>茶树3D模型 - {{ plant.variety or '茶树' }} #{{ plant.id }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-green-800 text-white">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-leaf text-2xl"></i>
+        <h1 class="text-lg font-bold">茶树3D模型</h1>
+      </div>
+      <a href="/growth-model" class="text-sm hover:text-green-200">返回生长模型</a>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-4 py-6">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-semibold text-gray-800">{{ plant.variety or '茶树' }} #{{ plant.id }}</h2>
+        <p class="text-gray-500 text-sm">阶段: {{ plant.current_stage or '-' }} | 高度: {{ '%.1f' % (plant.height or 0) }} cm | 冠幅: {{ '%.1f' % (plant.crown_width or 0) }} cm | 叶片: {{ plant.leaf_count or 0 }}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btnReload" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm">重新加载</button>
+        <button id="btnPlay" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">播放生长动画</button>
+        <button id="btnPause" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">暂停</button>
+        <label class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm cursor-pointer">
+          <input type="file" id="filesInput" multiple accept="image/*" class="hidden" /> 上传照片
+        </label>
+        <button id="btnReconstruct" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-sm">重建真实模型</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div class="lg:col-span-3 bg-white rounded-xl shadow p-2">
+        <div id="threeContainer" class="h-[600px] w-full"></div>
+      </div>
+      <div class="bg-white rounded-xl shadow p-4">
+        <h3 class="font-medium text-gray-800 mb-3">模型参数</h3>
+        <div id="modelInfo" class="text-sm text-gray-700 space-y-1"></div>
+        <h3 class="font-medium text-gray-800 mt-5 mb-2">环境数据(近30)</h3>
+        <div id="envList" class="text-xs text-gray-600 space-y-1 max-h-64 overflow-auto"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const PLANT_ID = {{ plant.id }};
+    let scene, camera, renderer, controls;
+    let trunkGroup, crownGroup, leavesGroup, rootsGroup;
+    let animationData = [];
+    let isPlaying = false;
+    let currentFrame = 0;
+    let realisticMesh = null;
+
+    function initThree() {
+      const container = document.getElementById('threeContainer');
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf0f4f7);
+
+      camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+      camera.position.set(3, 2, 6);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      container.innerHTML = '';
+      container.appendChild(renderer.domElement);
+
+      const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambient);
+      const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+      dir.position.set(5, 6, 4);
+      scene.add(dir);
+
+      const grid = new THREE.GridHelper(20, 20, 0xcccccc, 0xeeeeee);
+      scene.add(grid);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+
+      window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      });
+    }
+
+    function clearGroups() {
+      if (trunkGroup) scene.remove(trunkGroup);
+      if (crownGroup) scene.remove(crownGroup);
+      if (leavesGroup) scene.remove(leavesGroup);
+      if (rootsGroup) scene.remove(rootsGroup);
+    }
+
+    function buildMeshFromPoints(points, color, size = 0.02) {
+      const group = new THREE.Group();
+      const material = new THREE.MeshPhongMaterial({ color });
+      for (let i = 0; i < points.length; i++) {
+        const [x, y, z] = points[i];
+        const geo = new THREE.SphereGeometry(size, 8, 8);
+        const mesh = new THREE.Mesh(geo, material);
+        mesh.position.set(x, z, y); // 交换y/z以更自然视角
+        group.add(mesh);
+      }
+      return group;
+    }
+
+    function applyAnimationScale(progress, params) {
+      if (!trunkGroup || !crownGroup || !leavesGroup) return;
+      const heightScale = 0.3 + progress * 0.7;
+      const widthScale = 0.2 + progress * 0.8;
+      trunkGroup.scale.set(widthScale, heightScale, widthScale);
+      crownGroup.scale.set(widthScale, heightScale, widthScale);
+      leavesGroup.scale.set(widthScale, heightScale, widthScale);
+    }
+
+    async function loadModel() {
+      const info = document.getElementById('modelInfo');
+      const envList = document.getElementById('envList');
+      info.textContent = '加载中...';
+      envList.textContent = '';
+      try {
+        const res = await fetch(`/api/tea-plants/${PLANT_ID}/3d-model`);
+        const data = await res.json();
+        clearGroups();
+        if (realisticMesh) { scene.remove(realisticMesh); realisticMesh = null; }
+
+        if (data.realistic_model && data.realistic_model.type === 'glb' && data.realistic_model.url) {
+          // 优先加载真实GLB模型
+          const loader = new THREE.GLTFLoader();
+          loader.load(data.realistic_model.url, (gltf) => {
+            realisticMesh = gltf.scene;
+            realisticMesh.scale.set(1.0, 1.0, 1.0);
+            scene.add(realisticMesh);
+          }, undefined, (err) => console.error('GLB加载失败', err));
+          info.innerHTML = '<div>检测到真实模型(GLB)，已优先加载。</div>';
+        } else {
+          const { model_data, model_parameters, growth_animation, environmental_data } = data;
+          trunkGroup = buildMeshFromPoints(model_data.trunk.points, 0x8B4513, 0.03);
+          crownGroup = buildMeshFromPoints(model_data.crown.points, 0x6B8E23, 0.02);
+          leavesGroup = buildMeshFromPoints(model_data.leaves.points, 0x2E8B57, 0.015);
+          rootsGroup = buildMeshFromPoints(model_data.roots.points, 0x8B5A2B, 0.02);
+          scene.add(trunkGroup);
+          scene.add(crownGroup);
+          scene.add(leavesGroup);
+          scene.add(rootsGroup);
+          animationData = growth_animation || [];
+          info.innerHTML = `
+            <div>基础高度: ${Number(model_parameters.base_height || 0).toFixed(2)} cm</div>
+            <div>基础冠幅: ${Number(model_parameters.base_width || 0).toFixed(2)} cm</div>
+            <div>叶片数量: ${model_parameters.leaf_count}</div>
+            <div>树干高度: ${Number(model_parameters.trunk_height || 0).toFixed(2)} cm</div>
+            <div>树冠高度: ${Number(model_parameters.crown_height || 0).toFixed(2)} cm</div>
+          `;
+          envList.innerHTML = (environmental_data || []).map(e => `
+            <div class="border-b pb-1">
+              <div>${e.timestamp || ''}</div>
+              <div>温度: ${e.temperature}℃ 湿度: ${e.humidity}% 土壤湿度: ${e.soil_moisture}%</div>
+            </div>
+          `).join('');
+          applyAnimationScale(1.0, model_parameters);
+        }
+      } catch (e) {
+        info.textContent = '加载失败';
+        console.error(e);
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (isPlaying && animationData.length > 0) {
+        const frame = animationData[currentFrame];
+        if (frame) {
+          applyAnimationScale(frame.progress, {});
+          currentFrame = (currentFrame + 1) % animationData.length;
+        }
+      }
+      controls && controls.update();
+      renderer && renderer.render(scene, camera);
+    }
+
+    document.getElementById('btnReload').addEventListener('click', loadModel);
+    document.getElementById('btnPlay').addEventListener('click', () => { isPlaying = true; });
+    document.getElementById('btnPause').addEventListener('click', () => { isPlaying = false; });
+    document.getElementById('filesInput').addEventListener('change', async (e) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      const form = new FormData();
+      for (const f of files) form.append('files', f);
+      const res = await fetch(`/api/tea-plants/${PLANT_ID}/upload-images`, { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || '上传失败');
+        return;
+      }
+      alert(`上传成功：${(data.saved||[]).length} 张`);
+    });
+    document.getElementById('btnReconstruct').addEventListener('click', async () => {
+      const res = await fetch(`/api/tea-plants/${PLANT_ID}/reconstruct-3d`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || '提交失败');
+        return;
+      }
+      alert('重建任务已提交，请稍后点击“重新加载”查看是否生成真实模型');
+    });
+
+    initThree();
+    loadModel();
+    animate();
+  </script>
+</body>
+</html>
+
+

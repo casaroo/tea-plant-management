@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>病虫害管理 - 茶叶生长模型系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 导航栏 -->
+    <nav class="bg-green-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-leaf text-2xl"></i>
+                <h1 class="text-xl font-bold">茶叶生长模型系统</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="/" class="hover:text-green-200 transition-colors duration-300">首页</a>
+                <a href="/tea-plants" class="hover:text-green-200 transition-colors duration-300">茶树管理</a>
+                <a href="/environmental-data" class="hover:text-green-200 transition-colors duration-300">环境监测</a>
+                <a href="/growth-model" class="hover:text-green-200 transition-colors duration-300">生长模型</a>
+                <a href="/weather-warning" class="hover:text-green-200 transition-colors duration-300">天气预警</a>
+                <a href="/fertilizer-recommendation" class="hover:text-green-200 transition-colors duration-300">施肥推荐</a>
+                <a href="/pest-management" class="hover:text-green-200 transition-colors duration-300 font-medium border-b-2 border-green-300 pb-1">病虫害管理</a>
+            </div>
+            <button class="md:hidden text-white focus:outline-none">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 移动端菜单 -->
+    <div class="md:hidden bg-green-700 hidden">
+        <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+            <a href="/" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">首页</a>
+            <a href="/tea-plants" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">茶树管理</a>
+            <a href="/environmental-data" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">环境监测</a>
+            <a href="/growth-model" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">生长模型</a>
+            <a href="/weather-warning" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">天气预警</a>
+            <a href="/fertilizer-recommendation" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">施肥推荐</a>
+            <a href="/pest-management" class="text-white bg-green-600 px-2 py-1 rounded transition-colors duration-300">病虫害管理</a>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <section class="mb-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between">
+                <div>
+                    <h2 class="text-[clamp(1.5rem,3vw,2.2rem)] font-bold text-gray-800 mb-2">茶园病虫害监测与预警</h2>
+                    <p class="text-gray-600">
+                        基于深度学习算法的病虫害识别系统，结合气象数据和历史发生规律，
+                        提供精准的病虫害预警和科学的防治建议，保障茶树健康生长。
+                    </p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <button id="registerPestBtn" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors duration-300 text-sm flex items-center">
+                        <i class="fa fa-camera mr-2"></i> 上传病虫害
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 病虫害预警状态 -->
+        <section class="mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 当前预警 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">当前病虫害预警</h3>
+                    </div>
+                    
+                    <div class="space-y-3" id="pestWarnings">
+                        <div class="border-l-4 border-red-500 bg-red-50 p-3 rounded">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-medium text-red-800">茶小绿叶蝉</h4>
+                                <span class="px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">高风险</span>
+                            </div>
+                            <p class="text-sm text-red-700 mt-1">预计未来7天发生概率为85%，主要影响新梢生长</p>
+                        </div>
+                        
+                        <div class="border-l-4 border-red-500 bg-red-50 p-3 rounded">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-medium text-red-800">茶灰枯病</h4>
+                                <span class="px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">高风险</span>
+                            </div>
+                            <p class="text-sm text-red-700 mt-1">预计未来7天发生概率为75%，叶片边缘易受感染</p>
+                        </div>
+                        
+                        <div class="border-l-4 border-red-500 bg-red-50 p-3 rounded">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-medium text-red-800">茶红蜘蛛</h4>
+                                <span class="px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">高风险</span>
+                            </div>
+                            <p class="text-sm text-red-700 mt-1">预计未来7天发生概率为70%，干旱天气易爆发</p>
+                        </div>
+                        
+                        <div class="border-l-4 border-yellow-500 bg-yellow-50 p-3 rounded">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-medium text-yellow-800">茶褐斑病</h4>
+                                <span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">中等风险</span>
+                            </div>
+                            <p class="text-sm text-yellow-700 mt-1">预计未来7天发生概率为45%，注意通风透光</p>
+                        </div>
+                        
+                        <div class="border-l-4 border-yellow-500 bg-yellow-50 p-3 rounded">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-medium text-yellow-800">茶角胸蝽</h4>
+                                <span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">中等风险</span>
+                            </div>
+                            <p class="text-sm text-yellow-700 mt-1">预计未来7天发生概率为40%，需定期检查嫩梢</p>
+                        </div>
+                        
+                        <div class="border-l-4 border-yellow-500 bg-yellow-50 p-3 rounded">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-medium text-yellow-800">茶藻斑病</h4>
+                                <span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">中等风险</span>
+                            </div>
+                            <p class="text-sm text-yellow-700 mt-1">预计未来7天发生概率为35%，改善通风条件</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 病虫害发生趋势 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">病虫害发生趋势</h3>
+                    
+                    <div class="h-64">
+                        <canvas id="pest-trend-chart"></canvas>
+                    </div>
+                    
+                    <div class="mt-4 grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                            <span class="text-gray-700">茶小绿叶蝉</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-gray-500 rounded-full mr-2"></span>
+                            <span class="text-gray-700">茶灰枯病</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-amber-500 rounded-full mr-2"></span>
+                            <span class="text-gray-700">茶褐斑病</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                            <span class="text-gray-700">茶角胸蝽</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                            <span class="text-gray-700">茶红蜘蛛</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
+                            <span class="text-gray-700">茶藻斑病</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 防治措施统计 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">防治措施统计</h3>
+                    
+                    <div class="h-64">
+                        <canvas id="control-methods-chart"></canvas>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                        <h4 class="font-medium text-gray-800 text-sm mb-2">本月防治重点</h4>
+                        <p class="text-sm text-gray-700">
+                            重点关注茶小绿叶蝉、茶灰枯病和茶红蜘蛛的防治，建议采用生物防治为主，
+                            物理防治为辅的综合防治策略，减少化学农药使用。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- 病虫害智能识别工具 -->
+        <section class="mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">病虫害智能识别工具</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- 左侧：上传识别区域 -->
+                    <div>
+                        <div id="uploader" class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-green-500 transition-colors duration-300 cursor-pointer mb-6">
+                            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fa fa-upload text-3xl text-green-600"></i>
+                            </div>
+                            <h4 class="font-medium text-gray-800 mb-2">上传叶片图片</h4>
+                            <p class="text-sm text-gray-500 mb-4">支持JPG、PNG格式，文件大小不超过5MB</p>
+                            <button id="selectBtn" class="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded-lg transition-colors duration-300 text-sm">
+                                选择图片
+                            </button>
+                            <p class="text-xs text-gray-400 mt-3">或拖放图片至此处</p>
+                            <input id="fileInput" type="file" accept="image/*" class="hidden" />
+                        </div>
+                        
+                        <!-- 预测结果展示区域 -->
+                        <div id="predictResult" class="hidden"></div>
+                        
+                        <!-- 识别说明 -->
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h4 class="font-medium text-gray-800 mb-3 text-sm">识别说明</h4>
+                            <ul class="space-y-2 text-xs text-gray-700">
+                                <li class="flex items-start">
+                                    <i class="fa fa-circle text-gray-400 text-[6px] mt-1.5 mr-2"></i>
+                                    <span>请拍摄清晰的叶片或害虫图片，尽量保持背景简洁、光线充足</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-circle text-gray-400 text-[6px] mt-1.5 mr-2"></i>
+                                    <span>建议拍摄叶片正面；若有病虫害特征（斑点、虫体等）请进行特写</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-circle text-gray-400 text-[6px] mt-1.5 mr-2"></i>
+                                    <span>系统基于深度学习算法，可识别6种常见茶树病虫害；结果用于辅助决策</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-circle text-gray-400 text-[6px] mt-1.5 mr-2"></i>
+                                    <span>识别准确率受拍摄质量影响，仅供参考；必要时请咨询植保专家</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- 右侧：常见病虫害叶片图 -->
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-4">常见病虫害叶片图</h4>
+                        <p class="text-sm text-gray-600 mb-6">点击图片查看对应的针对防治措施</p>
+                        
+                        <div class="grid grid-cols-2 gap-4" id="pestGallery">
+                            <div class="relative group cursor-pointer" data-pest="green_mirid_bug">
+                                <img id="img_green_mirid_bug" class="w-full h-32 object-cover rounded-lg border" alt="茶小绿叶蝉"/>
+                            </div>
+                            
+                            <div class="relative group cursor-pointer" data-pest="gray_blight">
+                                <img id="img_gray_blight" class="w-full h-32 object-cover rounded-lg border" alt="茶灰枯病"/>
+                            </div>
+                            
+                            <div class="relative group cursor-pointer" data-pest="red_spider">
+                                <img id="img_red_spider" class="w-full h-32 object-cover rounded-lg border" alt="茶红蜘蛛"/>
+                            </div>
+                            
+                            <div class="relative group cursor-pointer" data-pest="brown_blight">
+                                <img id="img_brown_blight" class="w-full h-32 object-cover rounded-lg border" alt="茶褐斑病"/>
+                            </div>
+                            
+                            <div class="relative group cursor-pointer" data-pest="helopeltis">
+                                <img id="img_helopeltis" class="w-full h-32 object-cover rounded-lg border" alt="茶角胸蝽"/>
+                            </div>
+                            
+                            <div class="relative group cursor-pointer" data-pest="tea_algal_leaf_spot">
+                                <img id="img_tea_algal_leaf_spot" class="w-full h-32 object-cover rounded-lg border" alt="茶藻斑病"/>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                            <h5 class="font-medium text-blue-800 mb-2 flex items-center">
+                                <i class="fa fa-info-circle mr-2"></i> 使用提示
+                            </h5>
+                            <p class="text-sm text-blue-700">
+                                点击任意病虫害图片可查看详细的症状特征、预防措施和治疗方案。
+                                建议结合实际情况和专业指导进行防治。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 病虫害登记模态框 -->
+    <div id="pestRegistrationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800">病虫害登记</h3>
+                    <button id="closePestModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="pestRegistrationForm" class="space-y-6">
+                    <!-- 图片上传区域 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">病虫害图片</label>
+                        <div id="pestImageUploader" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors duration-300 cursor-pointer">
+                            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fa fa-camera text-2xl text-green-600"></i>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">点击或拖拽上传病虫害图片</p>
+                            <p class="text-xs text-gray-400">支持JPG、PNG格式，文件大小不超过5MB</p>
+                            <input id="pestImageInput" type="file" accept="image/*" class="hidden" />
+                        </div>
+                        <div id="imagePreview" class="mt-4 hidden">
+                            <img id="previewImage" class="w-full h-48 object-cover rounded-lg" />
+                        </div>
+                    </div>
+                    
+                    <!-- 病虫害类型 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">病虫害类型</label>
+                            <select id="pestType" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">请选择病虫害类型</option>
+                                <option value="green_mirid_bug">茶小绿叶蝉</option>
+                                <option value="gray_blight">茶灰枯病</option>
+                                <option value="red_spider">茶红蜘蛛</option>
+                                <option value="brown_blight">茶褐斑病</option>
+                                <option value="helopeltis">茶角胸蝽</option>
+                                <option value="tea_algal_leaf_spot">茶藻斑病</option>
+                                
+                            </select>
+                        </div>
+                        
+                        <!-- 严重程度 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">严重程度</label>
+                            <select id="severity" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">请选择严重程度</option>
+                                <option value="1">轻微 (1级)</option>
+                                <option value="2">一般 (2级)</option>
+                                <option value="3">中等 (3级)</option>
+                                <option value="4">严重 (4级)</option>
+                                <option value="5">非常严重 (5级)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- 发现时间和位置 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">发现时间</label>
+                            <input id="discoveryTime" type="datetime-local" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">发现位置</label>
+                            <input id="location" type="text" placeholder="如：A区3排5号茶树" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <!-- 受影响面积 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">受影响面积 (平方米)</label>
+                        <input id="affectedArea" type="number" step="0.1" min="0" placeholder="请输入受影响的面积" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <!-- 备注 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">备注说明</label>
+                        <textarea id="notes" rows="3" placeholder="请描述病虫害的具体症状、可能原因等..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"></textarea>
+                    </div>
+                    
+                    <!-- 提交按钮 -->
+                    <div class="flex justify-end space-x-4 pt-6 border-t">
+                        <button type="button" id="cancelPestRegistration" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-300">
+                            取消
+                        </button>
+                        <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-300">
+                            <i class="fa fa-save mr-2"></i>提交登记
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const fileInput = document.getElementById('fileInput');
+      const selectBtn = document.getElementById('selectBtn');
+      const uploader = document.getElementById('uploader');
+      const predictResult = document.getElementById('predictResult');
+      const registerPestBtn = document.getElementById('registerPestBtn');
+      const pestRegistrationModal = document.getElementById('pestRegistrationModal');
+      const closePestModal = document.getElementById('closePestModal');
+      const cancelPestRegistration = document.getElementById('cancelPestRegistration');
+      const pestRegistrationForm = document.getElementById('pestRegistrationForm');
+      const pestImageUploader = document.getElementById('pestImageUploader');
+      const pestImageInput = document.getElementById('pestImageInput');
+      const imagePreview = document.getElementById('imagePreview');
+      const previewImage = document.getElementById('previewImage');
+
+      // 加载图库真实图片
+      try {
+        const imgResp = await fetch('/api/pests/sample-images');
+        const imgs = await imgResp.json();
+        const map = {
+          green_mirid_bug: 'img_green_mirid_bug',
+          gray_blight: 'img_gray_blight',
+          red_spider: 'img_red_spider',
+          brown_blight: 'img_brown_blight',
+          helopeltis: 'img_helopeltis',
+          tea_algal_leaf_spot: 'img_tea_algal_leaf_spot'
+        };
+        Object.keys(map).forEach(k => {
+          const el = document.getElementById(map[k]);
+          if (el && imgs[k]) el.src = imgs[k];
+        });
+      } catch (e) {}
+    
+      function showResult(data) {
+        predictResult.classList.remove('hidden');
+        if (data.error) {
+          predictResult.innerHTML = `<div class="text-red-600 text-sm">${data.error}</div>`;
+          return;
+        }
+        const top1 = data.top1 || {};
+        const top5 = data.top5 || [];
+        const treatment = top1.treatment_advice || {};
+        
+        // 风险等级颜色映射
+        const riskColors = {
+          '高': 'text-red-600 bg-red-50',
+          '中等': 'text-yellow-600 bg-yellow-50', 
+          '低': 'text-green-600 bg-green-50',
+          '无': 'text-gray-600 bg-gray-50'
+        };
+        const riskClass = riskColors[treatment.risk_level] || 'text-gray-600 bg-gray-50';
+        
+        const items = top5.map((x, i) => `
+          <div class="flex justify-between text-sm py-1 ${i === 0 ? 'font-medium' : ''}">
+            <span class="text-gray-700">Top${i+1}: ${x.label_zh || x.label}</span>
+            <span class="text-gray-500">${(x.confidence*100).toFixed(2)}%</span>
+          </div>`).join('');
+          
+        let treatmentHtml = '';
+        if (treatment.name) {
+          treatmentHtml = `
+            <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="font-medium text-blue-800">诊断详情</h4>
+                <span class="px-2 py-1 rounded-full text-xs ${riskClass}">${treatment.risk_level}风险</span>
+              </div>
+              
+              <div class="space-y-3 text-sm">
+                <div>
+                  <span class="font-medium text-gray-700">症状特征：</span>
+                  <p class="text-gray-600 mt-1">${treatment.symptoms}</p>
+                </div>
+                
+                <div>
+                  <span class="font-medium text-gray-700">预防措施：</span>
+                  <p class="text-gray-600 mt-1">${treatment.prevention}</p>
+                </div>
+                
+                <div>
+                  <span class="font-medium text-gray-700">治疗方案：</span>
+                  <p class="text-gray-600 mt-1">${treatment.treatment}</p>
+                </div>
+              </div>
+            </div>`;
+        }
+        
+        predictResult.innerHTML = `
+          <div class="bg-white p-4 rounded-lg border">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-medium text-gray-800">识别结果</h3>
+              <i class="fa fa-check-circle text-green-500"></i>
+            </div>
+            
+            <div class="text-lg font-medium text-gray-800 mb-2">
+              ${top1.label_zh || top1.label}
+              <span class="ml-2 text-sm text-gray-500">置信度 ${(top1.confidence*100).toFixed(2)}%</span>
+            </div>
+            
+            <div class="border-t border-gray-200 mt-3 pt-3">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">详细排名</h4>
+              ${items}
+            </div>
+            
+            ${treatmentHtml}
+          </div>`;
+      }
+
+      // 绘制趋势图
+      try {
+        const tResp = await fetch('/api/pests/trend');
+        const tData = await tResp.json();
+        const labels = Object.keys(tData.series).sort();
+        const cls = ['green_mirid_bug','gray_blight','brown_blight','helopeltis','red_spider','tea_algal_leaf_spot'];
+        const colors = {
+          green_mirid_bug: '#22c55e',
+          gray_blight: '#6b7280',
+          brown_blight: '#f59e0b',
+          helopeltis: '#8b5cf6',
+          red_spider: '#ef4444',
+          tea_algal_leaf_spot: '#fb923c'
+        };
+        const datasets = cls.map(k => ({
+          label: k,
+          data: labels.map(d => (tData.series[d] && tData.series[d][k]) || 0),
+          borderColor: colors[k],
+          backgroundColor: colors[k],
+          tension: 0.3
+        }));
+        const ctx = document.getElementById('pest-trend-chart');
+        if (ctx && window.Chart) {
+          new Chart(ctx, { type: 'line', data: { labels, datasets }, options: { plugins: { legend: { display: true }}, responsive: true, maintainAspectRatio: false } });
+        }
+      } catch (e) {}
+
+      // 绘制防治统计
+      try {
+        const cResp = await fetch('/api/pests/control-stats');
+        const cData = await cResp.json();
+        const ctx2 = document.getElementById('control-methods-chart');
+        if (ctx2 && window.Chart) {
+          new Chart(ctx2, {
+            type: 'bar',
+            data: {
+              labels: Object.keys(cData.buckets),
+              datasets: [{
+                label: '记录数',
+                data: Object.values(cData.buckets),
+                backgroundColor: ['#bbf7d0','#fde68a','#fecaca']
+              }]
+            },
+            options: { plugins: { legend: { display: false }}, responsive: true, maintainAspectRatio: false }
+          });
+        }
+      } catch (e) {}
+    
+      async function uploadAndPredict(file) {
+        predictResult.classList.remove('hidden');
+        predictResult.innerHTML = '<div class="text-gray-600 text-sm">识别中，请稍候...</div>';
+        const form = new FormData();
+        form.append('file', file);
+        try {
+          const resp = await fetch('/api/pests/classify', { method: 'POST', body: form });
+          const data = await resp.json();
+          showResult(data);
+        } catch (err) {
+          showResult({ error: '网络异常或服务器错误' });
+        }
+      }
+    
+      // 绑定上传按钮事件
+      if (selectBtn) selectBtn.addEventListener('click', () => fileInput && fileInput.click());
+      
+      // 病虫害登记模态框事件
+      if (registerPestBtn) {
+        registerPestBtn.addEventListener('click', () => {
+          pestRegistrationModal.classList.remove('hidden');
+          // 设置默认时间为当前时间
+          const now = new Date();
+          now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+          document.getElementById('discoveryTime').value = now.toISOString().slice(0, 16);
+        });
+      }
+      
+      // 关闭模态框事件
+      if (closePestModal) {
+        closePestModal.addEventListener('click', () => {
+          pestRegistrationModal.classList.add('hidden');
+          resetPestForm();
+        });
+      }
+      
+      if (cancelPestRegistration) {
+        cancelPestRegistration.addEventListener('click', () => {
+          pestRegistrationModal.classList.add('hidden');
+          resetPestForm();
+        });
+      }
+      
+      // 点击背景关闭模态框
+      pestRegistrationModal.addEventListener('click', (e) => {
+        if (e.target === pestRegistrationModal) {
+          pestRegistrationModal.classList.add('hidden');
+          resetPestForm();
+        }
+      });
+      
+      // 病虫害图片上传
+      if (pestImageUploader) {
+        pestImageUploader.addEventListener('click', () => pestImageInput.click());
+      }
+      
+      if (pestImageInput) {
+        pestImageInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              previewImage.src = e.target.result;
+              imagePreview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+      
+      // 重置表单函数
+      function resetPestForm() {
+        pestRegistrationForm.reset();
+        imagePreview.classList.add('hidden');
+        previewImage.src = '';
+      }
+      
+      // 提交病虫害登记
+      if (pestRegistrationForm) {
+        pestRegistrationForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const formData = new FormData();
+          const imageFile = pestImageInput.files[0];
+          
+          if (!imageFile) {
+            alert('请上传病虫害图片');
+            return;
+          }
+          
+          if (!document.getElementById('pestType').value) {
+            alert('请选择病虫害类型');
+            return;
+          }
+          
+          if (!document.getElementById('severity').value) {
+            alert('请选择严重程度');
+            return;
+          }
+          
+          // 构建提交数据
+          formData.append('image', imageFile);
+          formData.append('pest_type', document.getElementById('pestType').value);
+          formData.append('severity', document.getElementById('severity').value);
+          formData.append('discovery_time', document.getElementById('discoveryTime').value);
+          formData.append('location', document.getElementById('location').value);
+          formData.append('affected_area', document.getElementById('affectedArea').value);
+          formData.append('notes', document.getElementById('notes').value);
+          
+          try {
+            const response = await fetch('/api/pests/register', {
+              method: 'POST',
+              body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+              alert('病虫害登记成功！');
+              pestRegistrationModal.classList.add('hidden');
+              resetPestForm();
+              // 刷新预警数据
+              location.reload();
+            } else {
+              alert(result.error || '登记失败，请重试');
+            }
+          } catch (error) {
+            alert('网络错误，请重试');
+          }
+        });
+      }
+      
+      if (fileInput) fileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) uploadAndPredict(file);
+      });
+    
+      if (uploader) {
+        uploader.addEventListener('dragover', (e) => { e.preventDefault(); uploader.classList.add('border-green-500'); });
+        uploader.addEventListener('dragleave', () => uploader.classList.remove('border-green-500'));
+        uploader.addEventListener('drop', (e) => {
+          e.preventDefault();
+          uploader.classList.remove('border-green-500');
+          const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+          if (file) uploadAndPredict(file);
+        });
+      }
+      
+      // 病虫害图库点击事件
+      const pestGallery = document.getElementById('pestGallery');
+      if (pestGallery) {
+        pestGallery.addEventListener('click', async (e) => {
+          const pestItem = e.target.closest('[data-pest]');
+          if (pestItem) {
+            const pestType = pestItem.getAttribute('data-pest');
+            try {
+              const resp = await fetch(`/api/pests/info/${pestType}`);
+              const data = await resp.json();
+              if (data.error) {
+                alert('获取病虫害信息失败');
+                return;
+              }
+              
+              // 显示病虫害详细信息
+              const modal = document.createElement('div');
+              modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+              modal.innerHTML = `
+                <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                  <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                      <h3 class="text-xl font-semibold text-gray-800">${data.name}</h3>
+                      <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fa fa-times text-xl"></i>
+                      </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                      <div>
+                        <h4 class="font-medium text-gray-800 mb-2">症状特征</h4>
+                        <p class="text-gray-600 text-sm">${data.symptoms}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 class="font-medium text-gray-800 mb-2">预防措施</h4>
+                        <p class="text-gray-600 text-sm">${data.prevention}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 class="font-medium text-gray-800 mb-2">治疗方案</h4>
+                        <p class="text-gray-600 text-sm">${data.treatment}</p>
+                      </div>
+                      
+                      <div class="flex items-center justify-between pt-3 border-t">
+                        <span class="text-sm text-gray-500">风险等级</span>
+                        <span class="px-3 py-1 rounded-full text-xs ${
+                          data.risk_level === '高' ? 'bg-red-100 text-red-800' :
+                          data.risk_level === '中等' ? 'bg-yellow-100 text-yellow-800' :
+                          data.risk_level === '低' ? 'bg-green-100 text-green-800' :
+                          'bg-gray-100 text-gray-800'
+                        }">${data.risk_level}风险</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+              
+              document.body.appendChild(modal);
+              
+              // 关闭模态框
+              modal.querySelector('#closeModal').addEventListener('click', () => {
+                document.body.removeChild(modal);
+              });
+              
+              modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                  document.body.removeChild(modal);
+                }
+              });
+              
+            } catch (err) {
+              alert('获取病虫害信息失败');
+            }
+          }
+        });
+      }
+    });
+    </script>
+</body>
+</html>
+      }
+    });
+    </script>
+</body>
+</html>

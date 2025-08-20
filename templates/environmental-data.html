@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>环境监测 - 茶叶生长模型系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 导航栏 -->
+    <nav class="bg-green-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-leaf text-2xl"></i>
+                <h1 class="text-xl font-bold">茶叶生长模型系统</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="/" class="hover:text-green-200 transition-colors duration-300">首页</a>
+                <a href="/tea-plants" class="hover:text-green-200 transition-colors duration-300">茶树管理</a>
+                <a href="/environmental-data" class="hover:text-green-200 transition-colors duration-300 font-medium border-b-2 border-green-300 pb-1">环境监测</a>
+                <a href="/growth-model" class="hover:text-green-200 transition-colors duration-300">生长模型</a>
+                <a href="/weather-warning" class="hover:text-green-200 transition-colors duration-300">天气预警</a>
+                <a href="/fertilizer-recommendation" class="hover:text-green-200 transition-colors duration-300">施肥推荐</a>
+                <a href="/pest-management" class="hover:text-green-200 transition-colors duration-300">病虫害管理</a>
+            </div>
+            <button class="md:hidden text-white focus:outline-none">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 移动端菜单 -->
+    <div class="md:hidden bg-green-700 hidden">
+        <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+            <a href="/" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">首页</a>
+            <a href="/tea-plants" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">茶树管理</a>
+            <a href="/environmental-data" class="text-white bg-green-600 px-2 py-1 rounded transition-colors duration-300">环境监测</a>
+            <a href="/growth-model" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">生长模型</a>
+            <a href="/weather-warning" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">天气预警</a>
+            <a href="/fertilizer-recommendation" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">施肥推荐</a>
+            <a href="/pest-management" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">病虫害管理</a>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <section class="mb-8">
+            <h2 class="text-[clamp(1.5rem,3vw,2.2rem)] font-bold text-gray-800 mb-2">茶园环境监测数据</h2>
+            <p class="text-gray-600">
+                实时监测茶园空气温度、湿度、光照强度、降雨量等气象数据，以及土壤养分、
+                温湿度等土壤数据，为茶树生长提供科学的环境评估依据。
+            </p>
+        </section>
+
+        <!-- 实时监测概览 -->
+        <section class="mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800">实时环境监测数据</h3>
+                    <div class="text-sm text-gray-500">
+                        最后更新: <span id="last-update-time">2024-06-15 15:45</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- 空气温度 -->
+                    <div class="border border-gray-200 rounded-lg p-5">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">空气温度</h4>
+                                <p class="text-3xl font-bold text-gray-800 mt-1" id="air-temperature">26.8°C</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                                <i class="fa fa-thermometer-half text-red-500"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm">
+                            <span class="text-green-500 flex items-center">
+                                <i class="fa fa-arrow-up mr-1"></i> 1.2°C
+                            </span>
+                            <span class="text-gray-500 ml-2">较昨日同期</span>
+                        </div>
+                        <div class="mt-3 h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-red-500 rounded-full" style="width: 65%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">适宜范围: 18-28°C</p>
+                    </div>
+                    
+                    <!-- 空气湿度 -->
+                    <div class="border border-gray-200 rounded-lg p-5">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">空气湿度</h4>
+                                <p class="text-3xl font-bold text-gray-800 mt-1" id="air-humidity">72%</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <i class="fa fa-tint text-blue-500"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm">
+                            <span class="text-red-500 flex items-center">
+                                <i class="fa fa-arrow-down mr-1"></i> 3%
+                            </span>
+                            <span class="text-gray-500 ml-2">较昨日同期</span>
+                        </div>
+                        <div class="mt-3 h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-blue-500 rounded-full" style="width: 72%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">适宜范围: 60-85%</p>
+                    </div>
+                    
+                    <!-- 光照强度 -->
+                    <div class="border border-gray-200 rounded-lg p-5">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">光照强度</h4>
+                                <p class="text-3xl font-bold text-gray-800 mt-1" id="light-intensity">68000 lux</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                                <i class="fa fa-sun-o text-yellow-500"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm">
+                            <span class="text-green-500 flex items-center">
+                                <i class="fa fa-arrow-up mr-1"></i> 5000 lux
+                            </span>
+                            <span class="text-gray-500 ml-2">较昨日同期</span>
+                        </div>
+                        <div class="mt-3 h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-yellow-500 rounded-full" style="width: 68%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">适宜范围: 30000-80000 lux</p>
+                    </div>
+                    
+                    <!-- 土壤湿度 -->
+                    <div class="border border-gray-200 rounded-lg p-5">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">土壤湿度</h4>
+                                <p class="text-3xl font-bold text-gray-800 mt-1" id="soil-moisture">65%</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
+                                <i class="fa fa-tint text-teal-500"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm">
+                            <span class="text-green-500 flex items-center">
+                                <i class="fa fa-arrow-up mr-1"></i> 2%
+                            </span>
+                            <span class="text-gray-500 ml-2">较昨日同期</span>
+                        </div>
+                        <div class="mt-3 h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-teal-500 rounded-full" style="width: 65%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">适宜范围: 50-70%</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 环境数据趋势分析 -->
+        <section class="mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800">环境数据趋势分析</h3>
+                    <div class="mt-3 md:mt-0 flex space-x-2">
+                        <button class="px-3 py-1 text-sm bg-green-600 text-white rounded transition-colors" data-period="day">日趋势</button>
+                        <button class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors" data-period="week">周趋势</button>
+                        <button class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors" data-period="month">月趋势</button>
+                        <button class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors" data-period="year">年趋势</button>
+                    </div>
+                </div>
+                
+                <!-- 趋势分析概览 -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-600">温度趋势</h4>
+                                <p class="text-lg font-bold text-gray-800">上升</p>
+                            </div>
+                            <i class="fa fa-arrow-up text-blue-500 text-xl"></i>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">较昨日 +1.2°C</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-600">湿度趋势</h4>
+                                <p class="text-lg font-bold text-gray-800">稳定</p>
+                            </div>
+                            <i class="fa fa-minus text-green-500 text-xl"></i>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">较昨日 -0.5%</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-600">光照趋势</h4>
+                                <p class="text-lg font-bold text-gray-800">增强</p>
+                            </div>
+                            <i class="fa fa-arrow-up text-yellow-500 text-xl"></i>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">较昨日 +8.2%</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-600">土壤湿度</h4>
+                                <p class="text-lg font-bold text-gray-800">适宜</p>
+                            </div>
+                            <i class="fa fa-check text-purple-500 text-xl"></i>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">在适宜范围内</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- 温度湿度趋势 -->
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-4">温度与湿度趋势</h4>
+                        <div class="h-80">
+                            <canvas id="temp-humidity-chart"></canvas>
+                        </div>
+                        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                            <h5 class="text-sm font-medium text-blue-800 mb-2">分析结论</h5>
+                            <p class="text-xs text-blue-700">温度呈上升趋势，湿度相对稳定，当前环境条件有利于茶树生长。建议关注午后高温时段，必要时进行遮阳处理。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 光照与土壤湿度趋势 -->
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-4">光照与土壤湿度趋势</h4>
+                        <div class="h-80">
+                            <canvas id="light-soil-chart"></canvas>
+                        </div>
+                        <div class="mt-4 p-3 bg-green-50 rounded-lg">
+                            <h5 class="text-sm font-medium text-green-800 mb-2">分析结论</h5>
+                            <p class="text-xs text-green-700">光照强度适中，土壤湿度保持在适宜范围。建议维持当前灌溉频率，避免过度浇水。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 环境异常预警 -->
+                <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <i class="fa fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                        <h4 class="font-medium text-yellow-800">环境异常预警</h4>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                            <span class="text-yellow-700">预计明日午后温度可能超过30°C</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                            <span class="text-orange-700">土壤pH值偏低，建议适当调节</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                            <span class="text-green-700">未来3天天气适宜，可进行施肥作业</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 土壤养分状况分析 -->
+        <section class="mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800">土壤养分状况分析</h3>
+                    <div class="flex space-x-2">
+                        <button id="export-report-btn" class="text-green-600 hover:text-green-800 text-sm font-medium flex items-center">
+                            导出报告
+                            <i class="fa fa-download ml-1"></i>
+                        </button>
+                        <button id="history-compare-btn" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                            历史对比
+                            <i class="fa fa-chart-line ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 土壤养分概览 -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-medium text-gray-600">综合评分</h4>
+                            <span class="text-lg font-bold text-blue-600">72/100</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: 72%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">较上月 +5分</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-medium text-gray-600">pH值</h4>
+                            <span class="text-lg font-bold text-green-600">5.2</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 80%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">适宜范围: 4.5-6.0</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-medium text-gray-600">有机质</h4>
+                            <span class="text-lg font-bold text-yellow-600">3.2%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-yellow-500 h-2 rounded-full" style="width: 75%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">适宜范围: 2.5-4.0%</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-medium text-gray-600">保水能力</h4>
+                            <span class="text-lg font-bold text-purple-600">良好</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-purple-500 h-2 rounded-full" style="width: 85%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">土壤结构良好</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- 土壤养分雷达图 -->
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-4">养分平衡分析</h4>
+                        <div class="h-64">
+                            <canvas id="soil-nutrients-chart"></canvas>
+                        </div>
+                        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                            <h5 class="text-sm font-medium text-blue-800 mb-2">分析结论</h5>
+                            <p class="text-xs text-blue-700">土壤养分整体处于中等水平，氮磷钾比例基本合理，但磷含量偏低，建议适当增施磷肥。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 土壤养分详细数据 -->
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-4">养分详细数据</h4>
+                        <div class="space-y-4">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                            <i class="fa fa-flask text-blue-600"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-gray-800">氮 (N)</h4>
+                                            <p class="text-sm text-gray-500">影响茶叶蛋白质和氨基酸含量</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xl font-bold text-gray-800">28 mg/kg</p>
+                                        <p class="text-xs text-yellow-500">略低于适宜范围</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>适宜范围: 30-50 mg/kg</span>
+                                    <span>建议: 增施氮肥</span>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                                            <i class="fa fa-flask text-purple-600"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-gray-800">磷 (P)</h4>
+                                            <p class="text-sm text-gray-500">影响茶叶品质和抗逆性</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xl font-bold text-gray-800">12 mg/kg</p>
+                                        <p class="text-xs text-red-500">低于适宜范围</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>适宜范围: 15-30 mg/kg</span>
+                                    <span>建议: 重点补充磷肥</span>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                                            <i class="fa fa-flask text-yellow-600"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-gray-800">钾 (K)</h4>
+                                            <p class="text-sm text-gray-500">影响茶叶香气和滋味</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xl font-bold text-gray-800">22 mg/kg</p>
+                                        <p class="text-xs text-yellow-500">略低于适宜范围</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>适宜范围: 25-40 mg/kg</span>
+                                    <span>建议: 适当补充钾肥</span>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                            <i class="fa fa-flask text-green-600"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-medium text-gray-800">有机质</h4>
+                                            <p class="text-sm text-gray-500">影响土壤肥力和保水能力</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xl font-bold text-gray-800">3.2%</p>
+                                        <p class="text-xs text-green-500">处于适宜范围</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>适宜范围: 2.5-4.0%</span>
+                                    <span>建议: 维持现状</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 施肥建议 -->
+                <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div class="flex items-center mb-3">
+                        <i class="fa fa-lightbulb-o text-green-500 mr-2"></i>
+                        <h4 class="font-medium text-green-800">施肥建议</h4>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div class="bg-white p-3 rounded border">
+                            <h5 class="font-medium text-gray-800 mb-2">短期建议 (1-2周)</h5>
+                            <ul class="text-xs text-gray-600 space-y-1">
+                                <li>• 增施磷肥 15-20 kg/亩</li>
+                                <li>• 补充氮肥 10-15 kg/亩</li>
+                                <li>• 叶面喷施钾肥</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-3 rounded border">
+                            <h5 class="font-medium text-gray-800 mb-2">中期建议 (1-2月)</h5>
+                            <ul class="text-xs text-gray-600 space-y-1">
+                                <li>• 施用有机肥 500-800 kg/亩</li>
+                                <li>• 调整氮磷钾比例至 2:1:1.5</li>
+                                <li>• 定期监测土壤pH值</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-3 rounded border">
+                            <h5 class="font-medium text-gray-800 mb-2">长期建议 (3-6月)</h5>
+                            <ul class="text-xs text-gray-600 space-y-1">
+                                <li>• 建立土壤改良计划</li>
+                                <li>• 增加有机质含量至 4%</li>
+                                <li>• 优化灌溉系统</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 监测点管理 -->
+        <section class="mb-10">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800">环境监测点管理</h3>
+                    <button id="add-monitoring-point-btn" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors duration-300 text-sm flex items-center">
+                        <i class="fa fa-plus mr-2"></i> 添加监测点
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- 监测点1 -->
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="h-3 bg-green-500"></div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-4">
+                                <h4 class="font-medium text-gray-800">A区监测点</h4>
+                                <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">正常运行</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4">安装位置：A区茶园中心区域</p>
+                            
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">设备型号</span>
+                                    <span class="font-medium">ENV-2000A</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">安装日期</span>
+                                    <span class="font-medium">2024-01-15</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">最后维护</span>
+                                    <span class="font-medium">2024-05-20</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 flex space-x-2">
+                                <button class="flex-1 py-1.5 text-center text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                                    查看数据
+                                </button>
+                                <button class="flex-1 py-1.5 text-center text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">
+                                    配置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 监测点2 -->
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="h-3 bg-green-500"></div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-4">
+                                <h4 class="font-medium text-gray-800">B区监测点</h4>
+                                <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">正常运行</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4">安装位置：B区茶园中心区域</p>
+                            
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">设备型号</span>
+                                    <span class="font-medium">ENV-2000A</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">安装日期</span>
+                                    <span class="font-medium">2024-01-15</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">最后维护</span>
+                                    <span class="font-medium">2024-05-20</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 flex space-x-2">
+                                <button class="flex-1 py-1.5 text-center text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                                    查看数据
+                                </button>
+                                <button class="flex-1 py-1.5 text-center text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">
+                                    配置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 监测点3 -->
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="h-3 bg-green-500"></div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-4">
+                                <h4 class="font-medium text-gray-800">C区监测点</h4>
+                                <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">正常运行</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4">安装位置：C区茶园中心区域</p>
+                            
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">设备型号</span>
+                                    <span class="font-medium">ENV-2000A</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">安装日期</span>
+                                    <span class="font-medium">2024-01-20</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">最后维护</span>
+                                    <span class="font-medium">2024-05-20</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 flex space-x-2">
+                                <button class="flex-1 py-1.5 text-center text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                                    查看数据
+                                </button>
+                                <button class="flex-1 py-1.5 text-center text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">
+                                    配置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 监测点4 -->
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="h-3 bg-yellow-500"></div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-4">
+                                <h4 class="font-medium text-gray-800">D区监测点</h4>
+                                <span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">信号弱</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4">安装位置：D区茶园边缘区域</p>
+                            
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">设备型号</span>
+                                    <span class="font-medium">ENV-2000A</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">安装日期</span>
+                                    <span class="font-medium">2024-01-20</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">最后维护</span>
+                                    <span class="font-medium">2024-05-20</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 flex space-x-2">
+                                <button class="flex-1 py-1.5 text-center text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                                    查看数据
+                                </button>
+                                <button class="flex-1 py-1.5 text-center text-sm bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors">
+                                    维修
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fa fa-leaf mr-2"></i>茶叶生长模型系统
+                    </h3>
+                    <p class="text-gray-400">
+                        利用先进的数据分析和人工智能技术，为茶园管理提供全方位的智能解决方案，
+                        助力茶叶产业高质量发展。
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">快速链接</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white transition-colors duration-300">首页</a></li>
+                        <li><a href="/growth-model" class="text-gray-400 hover:text-white transition-colors duration-300">生长模型</a></li>
+                        <li><a href="/weather-warning" class="text-gray-400 hover:text-white transition-colors duration-300">天气预警</a></li>
+                        <li><a href="/fertilizer-recommendation" class="text-gray-400 hover:text-white transition-colors duration-300">施肥推荐</a></li>
+                        <li><a href="/pest-management" class="text-gray-400 hover:text-white transition-colors duration-300">病虫害管理</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">联系我们</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-envelope mr-2"></i> contact@teagrowthsystem.com
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-phone mr-2"></i> +86 123 4567 8910
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-map-marker mr-2"></i> 中国茶叶研究所
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500">
+                <p>&copy; 2024 茶叶生长模型系统 版权所有</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 移动端菜单切换
+        document.querySelector('.fa-bars').parentElement.addEventListener('click', function() {
+            document.querySelector('.md\\:hidden.bg-green-700').classList.toggle('hidden');
+        });
+
+        // 温度湿度趋势图表
+        const tempHumidityCtx = document.getElementById('temp-humidity-chart').getContext('2d');
+        const tempHumidityChart = new Chart(tempHumidityCtx, {
+            type: 'line',
+            data: {
+                labels: ['6:00', '8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'],
+                datasets: [
+                    {
+                        label: '空气温度 (°C)',
+                        data: [20.5, 22.3, 24.8, 27.2, 28.1, 27.5, 26.8, 25.2],
+                        borderColor: '#EF4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: '空气湿度 (%)',
+                        data: [85, 80, 75, 68, 65, 67, 72, 78],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: '温度 (°C)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: '湿度 (%)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // 光照与土壤湿度趋势图表
+        const lightSoilCtx = document.getElementById('light-soil-chart').getContext('2d');
+        const lightSoilChart = new Chart(lightSoilCtx, {
+            type: 'line',
+            data: {
+                labels: ['6:00', '8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'],
+                datasets: [
+                    {
+                        label: '光照强度 (1000 lux)',
+                        data: [5, 20, 45, 72, 78, 68, 42, 10],
+                        borderColor: '#F59E0B',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: '土壤湿度 (%)',
+                        data: [68, 67, 66, 64, 63, 64, 65, 66],
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: '光照强度 (1000 lux)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: '土壤湿度 (%)'
+                        },
+                        min: 50,
+                        max: 80,
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // 土壤养分雷达图
+        const soilNutrientsCtx = document.getElementById('soil-nutrients-chart').getContext('2d');
+        new Chart(soilNutrientsCtx, {
+            type: 'radar',
+            data: {
+                labels: ['氮 (N)', '磷 (P)', '钾 (K)', '有机质', 'pH值', '土壤湿度'],
+                datasets: [
+                    {
+                        label: '当前值',
+                        data: [56, 40, 55, 75, 80, 65],
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
+                    },
+                    {
+                        label: '适宜值',
+                        data: [70, 60, 70, 80, 80, 70],
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(255, 99, 132, 1)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+
+        // 趋势分析时间段切换
+        document.querySelectorAll('[data-period]').forEach(button => {
+            button.addEventListener('click', function() {
+                // 更新按钮状态
+                document.querySelectorAll('[data-period]').forEach(btn => {
+                    btn.classList.remove('bg-green-600', 'text-white');
+                    btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                });
+                this.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                this.classList.add('bg-green-600', 'text-white');
+                
+                // 根据时间段更新图表数据
+                const period = this.getAttribute('data-period');
+                updateChartData(period);
+            });
+        });
+
+        // 更新图表数据函数
+        function updateChartData(period) {
+            let labels, tempData, humidityData, lightData, soilData;
+            
+            switch(period) {
+                case 'day':
+                    labels = ['6:00', '8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
+                    tempData = [20.5, 22.3, 24.8, 27.2, 28.1, 27.5, 26.8, 25.2];
+                    humidityData = [85, 80, 75, 68, 65, 67, 72, 78];
+                    lightData = [5, 20, 45, 72, 78, 68, 42, 10];
+                    soilData = [68, 67, 66, 64, 63, 64, 65, 66];
+                    break;
+                case 'week':
+                    labels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+                    tempData = [24.2, 25.8, 26.5, 27.1, 28.3, 27.8, 26.5];
+                    humidityData = [72, 70, 68, 65, 63, 66, 69];
+                    lightData = [45, 52, 58, 65, 72, 68, 55];
+                    soilData = [65, 64, 63, 62, 61, 63, 64];
+                    break;
+                case 'month':
+                    labels = ['第1周', '第2周', '第3周', '第4周'];
+                    tempData = [23.5, 25.2, 26.8, 27.5];
+                    humidityData = [75, 72, 68, 65];
+                    lightData = [42, 48, 55, 62];
+                    soilData = [66, 65, 64, 63];
+                    break;
+                case 'year':
+                    labels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+                    tempData = [15.2, 16.8, 18.5, 22.3, 25.8, 27.2, 28.5, 29.1, 26.8, 23.5, 19.8, 16.5];
+                    humidityData = [78, 75, 72, 68, 65, 63, 65, 68, 70, 72, 75, 77];
+                    lightData = [35, 42, 48, 55, 62, 68, 72, 70, 65, 58, 45, 38];
+                    soilData = [70, 69, 68, 66, 64, 63, 64, 65, 66, 67, 68, 69];
+                    break;
+            }
+            
+            // 更新温度湿度图表
+            tempHumidityChart.data.labels = labels;
+            tempHumidityChart.data.datasets[0].data = tempData;
+            tempHumidityChart.data.datasets[1].data = humidityData;
+            tempHumidityChart.update();
+            
+            // 更新光照土壤图表
+            lightSoilChart.data.labels = labels;
+            lightSoilChart.data.datasets[0].data = lightData;
+            lightSoilChart.data.datasets[1].data = soilData;
+            lightSoilChart.update();
+        }
+
+        // 模拟实时数据更新
+        function updateRealTimeData() {
+            // 随机微小变化模拟实时数据
+            const temp = parseFloat(document.getElementById('air-temperature').textContent);
+            const newTemp = (temp + (Math.random() * 0.4 - 0.2)).toFixed(1);
+            document.getElementById('air-temperature').textContent = newTemp + '°C';
+            
+            const humidity = parseInt(document.getElementById('air-humidity').textContent);
+            const newHumidity = Math.min(95, Math.max(40, humidity + Math.floor(Math.random() * 3) - 1));
+            document.getElementById('air-humidity').textContent = newHumidity + '%';
+            
+            // 每30秒更新一次
+            setTimeout(updateRealTimeData, 30000);
+        }
+        
+        // 启动实时数据更新
+        setTimeout(updateRealTimeData, 30000);
+
+        // 导出报告功能
+        document.getElementById('export-report-btn').addEventListener('click', function() {
+            const reportData = {
+                timestamp: new Date().toLocaleString('zh-CN'),
+                environmentalData: {
+                    temperature: document.getElementById('air-temperature').textContent,
+                    humidity: document.getElementById('air-humidity').textContent,
+                    lightIntensity: document.getElementById('light-intensity').textContent,
+                    soilMoisture: document.getElementById('soil-moisture').textContent
+                },
+                soilNutrients: {
+                    nitrogen: '28 mg/kg',
+                    phosphorus: '12 mg/kg',
+                    potassium: '22 mg/kg',
+                    organicMatter: '3.2%'
+                },
+                recommendations: [
+                    '增施磷肥 15-20 kg/亩',
+                    '补充氮肥 10-15 kg/亩',
+                    '叶面喷施钾肥',
+                    '定期监测土壤pH值'
+                ]
+            };
+            
+            // 创建报告内容
+            const reportContent = `
+茶园环境监测报告
+生成时间: ${reportData.timestamp}
+
+一、实时环境数据
+- 空气温度: ${reportData.environmentalData.temperature}
+- 空气湿度: ${reportData.environmentalData.humidity}
+- 光照强度: ${reportData.environmentalData.lightIntensity}
+- 土壤湿度: ${reportData.environmentalData.soilMoisture}
+
+二、土壤养分状况
+- 氮 (N): ${reportData.soilNutrients.nitrogen}
+- 磷 (P): ${reportData.soilNutrients.phosphorus}
+- 钾 (K): ${reportData.soilNutrients.potassium}
+- 有机质: ${reportData.soilNutrients.organicMatter}
+
+三、管理建议
+${reportData.recommendations.map(rec => `- ${rec}`).join('\n')}
+            `;
+            
+            // 创建下载链接
+            const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `茶园环境监测报告_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // 显示成功提示
+            showNotification('报告导出成功！', 'success');
+        });
+
+        // 历史对比功能
+        document.getElementById('history-compare-btn').addEventListener('click', function() {
+            // 创建历史对比模态框
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">历史数据对比</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()">
+                            <i class="fa fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-3">本月数据</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between p-3 bg-blue-50 rounded">
+                                    <span class="text-gray-600">平均温度</span>
+                                    <span class="font-medium">26.8°C</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-green-50 rounded">
+                                    <span class="text-gray-600">平均湿度</span>
+                                    <span class="font-medium">72%</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-yellow-50 rounded">
+                                    <span class="text-gray-600">平均光照</span>
+                                    <span class="font-medium">68,000 lux</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-purple-50 rounded">
+                                    <span class="text-gray-600">土壤湿度</span>
+                                    <span class="font-medium">65%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-3">上月数据</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between p-3 bg-blue-50 rounded">
+                                    <span class="text-gray-600">平均温度</span>
+                                    <span class="font-medium">24.2°C</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-green-50 rounded">
+                                    <span class="text-gray-600">平均湿度</span>
+                                    <span class="font-medium">78%</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-yellow-50 rounded">
+                                    <span class="text-gray-600">平均光照</span>
+                                    <span class="font-medium">55,000 lux</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-purple-50 rounded">
+                                    <span class="text-gray-600">土壤湿度</span>
+                                    <span class="font-medium">68%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-gray-50 rounded">
+                        <h5 class="font-medium text-gray-800 mb-2">对比分析</h5>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• 温度较上月上升2.6°C，符合季节性变化</li>
+                            <li>• 湿度下降6%，可能与降雨量减少有关</li>
+                            <li>• 光照强度增加23.6%，有利于茶树生长</li>
+                            <li>• 土壤湿度下降3%，建议适当增加灌溉</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 点击背景关闭模态框
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        });
+
+        // 监测点管理功能
+        document.querySelectorAll('.border.border-gray-200.rounded-lg.overflow-hidden button').forEach(button => {
+            button.addEventListener('click', function() {
+                const action = this.textContent.trim();
+                const monitoringPoint = this.closest('.border').querySelector('h4').textContent;
+                
+                if (action === '查看数据') {
+                    showMonitoringPointData(monitoringPoint);
+                } else if (action === '配置') {
+                    showMonitoringPointConfig(monitoringPoint);
+                } else if (action === '维修') {
+                    showMonitoringPointRepair(monitoringPoint);
+                }
+            });
+        });
+
+        // 显示监测点数据
+        function showMonitoringPointData(pointName) {
+            // 生成唯一的canvas ID
+            const canvasId = `monitoring-point-chart-${Date.now()}`;
+            
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">${pointName} - 详细数据</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()">
+                            <i class="fa fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-3">实时数据</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between p-3 bg-blue-50 rounded">
+                                    <span class="text-gray-600">温度</span>
+                                    <span class="font-medium">26.8°C</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-green-50 rounded">
+                                    <span class="text-gray-600">湿度</span>
+                                    <span class="font-medium">72%</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-yellow-50 rounded">
+                                    <span class="text-gray-600">光照</span>
+                                    <span class="font-medium">68,000 lux</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-purple-50 rounded">
+                                    <span class="text-gray-600">土壤湿度</span>
+                                    <span class="font-medium">65%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-3">设备状态</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between p-3 bg-green-50 rounded">
+                                    <span class="text-gray-600">信号强度</span>
+                                    <span class="font-medium text-green-600">良好</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-blue-50 rounded">
+                                    <span class="text-gray-600">电池电量</span>
+                                    <span class="font-medium">85%</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-yellow-50 rounded">
+                                    <span class="text-gray-600">最后更新</span>
+                                    <span class="font-medium">2分钟前</span>
+                                </div>
+                                <div class="flex justify-between p-3 bg-purple-50 rounded">
+                                    <span class="text-gray-600">数据质量</span>
+                                    <span class="font-medium text-green-600">优秀</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <h4 class="font-medium text-gray-800 mb-3">24小时趋势</h4>
+                        <div class="h-64 bg-gray-50 rounded p-4">
+                            <canvas id="${canvasId}" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 初始化24小时趋势图表
+            setTimeout(() => {
+                const canvas = document.getElementById(canvasId);
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    
+                    // 生成24小时的时间标签
+                    const labels = [];
+                    for (let i = 23; i >= 0; i--) {
+                        const hour = new Date();
+                        hour.setHours(hour.getHours() - i);
+                        labels.push(hour.getHours() + ':00');
+                    }
+                    
+                    // 生成模拟数据
+                    const temperatureData = labels.map(() => Math.random() * 10 + 20);
+                    const humidityData = labels.map(() => Math.random() * 20 + 60);
+                    const lightData = labels.map(() => Math.random() * 30000 + 50000);
+                    const soilMoistureData = labels.map(() => Math.random() * 20 + 55);
+                    
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: '温度 (°C)',
+                                    data: temperatureData,
+                                    borderColor: '#FF6384',
+                                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                                    tension: 0.3,
+                                    fill: false,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: '湿度 (%)',
+                                    data: humidityData,
+                                    borderColor: '#36A2EB',
+                                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                                    tension: 0.3,
+                                    fill: false,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: '光照 (lux)',
+                                    data: lightData,
+                                    borderColor: '#FFCE56',
+                                    backgroundColor: 'rgba(255, 206, 86, 0.1)',
+                                    tension: 0.3,
+                                    fill: false,
+                                    yAxisID: 'y1'
+                                },
+                                {
+                                    label: '土壤湿度 (%)',
+                                    data: soilMoistureData,
+                                    borderColor: '#4BC0C0',
+                                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                    tension: 0.3,
+                                    fill: false,
+                                    yAxisID: 'y'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: {
+                                        usePointStyle: true,
+                                        padding: 15
+                                    }
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    display: true,
+                                    title: {
+                                        display: true,
+                                        text: '时间'
+                                    }
+                                },
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: '温度/湿度/土壤湿度'
+                                    }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    title: {
+                                        display: true,
+                                        text: '光照强度'
+                                    },
+                                    grid: {
+                                        drawOnChartArea: false
+                                    }
+                                }
+                            },
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false
+                            }
+                        }
+                    });
+                }
+            }, 100);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // 显示监测点配置
+        function showMonitoringPointConfig(pointName) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">${pointName} - 设备配置</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()">
+                            <i class="fa fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">设备名称</label>
+                            <input type="text" value="${pointName}" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">设备型号</label>
+                            <input type="text" value="ENV-2000A" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">数据采集频率</label>
+                            <select class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option>每5分钟</option>
+                                <option>每10分钟</option>
+                                <option>每30分钟</option>
+                                <option>每1小时</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">报警阈值设置</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-600 mb-1">温度上限</label>
+                                    <input type="number" value="35" class="w-full p-2 border border-gray-300 rounded text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-600 mb-1">湿度下限</label>
+                                    <input type="number" value="40" class="w-full p-2 border border-gray-300 rounded text-sm">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-3 pt-4">
+                            <button class="flex-1 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition-colors">
+                                保存配置
+                            </button>
+                            <button class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400 transition-colors" onclick="this.closest('.fixed').remove()">
+                                取消
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // 显示监测点维修
+        function showMonitoringPointRepair(pointName) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">${pointName} - 设备维修</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()">
+                            <i class="fa fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded">
+                            <div class="flex items-center mb-2">
+                                <i class="fa fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                                <span class="font-medium text-yellow-800">设备状态异常</span>
+                            </div>
+                            <p class="text-sm text-yellow-700">信号强度较弱，建议检查天线连接和电源供应。</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">问题描述</label>
+                            <textarea class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500" rows="3" placeholder="请描述设备的具体问题...">信号强度较弱，数据传输不稳定</textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">维修优先级</label>
+                            <select class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option>高优先级</option>
+                                <option>中优先级</option>
+                                <option>低优先级</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">预计维修时间</label>
+                            <input type="datetime-local" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <div class="flex space-x-3 pt-4">
+                            <button class="flex-1 bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 transition-colors">
+                                提交维修申请
+                            </button>
+                            <button class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400 transition-colors" onclick="this.closest('.fixed').remove()">
+                                取消
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // 添加监测点功能
+        document.getElementById('add-monitoring-point-btn').addEventListener('click', function() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">添加监测点</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()">
+                            <i class="fa fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">监测点名称</label>
+                            <input type="text" id="point-name" placeholder="例如：E区监测点" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">安装位置</label>
+                            <textarea id="point-location" placeholder="请描述监测点的具体安装位置..." class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500" rows="2"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">设备型号</label>
+                            <select id="point-model" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="ENV-2000A">ENV-2000A (标准型)</option>
+                                <option value="ENV-2000B">ENV-2000B (增强型)</option>
+                                <option value="ENV-2000C">ENV-2000C (专业型)</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">监测参数</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2"> 温度
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2"> 湿度
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2"> 光照
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2"> 土壤湿度
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2"> 土壤pH
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2"> 风速
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">数据采集频率</label>
+                            <select class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option>每5分钟</option>
+                                <option>每10分钟</option>
+                                <option>每30分钟</option>
+                                <option>每1小时</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex space-x-3 pt-4">
+                            <button id="save-point-btn" class="flex-1 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition-colors">
+                                添加监测点
+                            </button>
+                            <button class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400 transition-colors" onclick="this.closest('.fixed').remove()">
+                                取消
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 保存监测点
+            modal.querySelector('#save-point-btn').addEventListener('click', function() {
+                const pointName = modal.querySelector('#point-name').value;
+                const pointLocation = modal.querySelector('#point-location').value;
+                const pointModel = modal.querySelector('#point-model').value;
+                
+                if (!pointName || !pointLocation) {
+                    showNotification('请填写完整的监测点信息', 'error');
+                    return;
+                }
+                
+                // 这里可以添加实际的保存逻辑
+                showNotification('监测点添加成功！', 'success');
+                modal.remove();
+                
+                // 模拟添加新的监测点卡片
+                setTimeout(() => {
+                    addNewMonitoringPoint(pointName, pointLocation, pointModel);
+                }, 1000);
+            });
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        });
+
+        // 添加新监测点卡片
+        function addNewMonitoringPoint(name, location, model) {
+            const monitoringPointsContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-4.gap-6');
+            const newPoint = document.createElement('div');
+            newPoint.className = 'border border-gray-200 rounded-lg overflow-hidden';
+            newPoint.innerHTML = `
+                <div class="h-3 bg-green-500"></div>
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-4">
+                        <h4 class="font-medium text-gray-800">${name}</h4>
+                        <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">正常运行</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">安装位置：${location}</p>
+                    
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">设备型号</span>
+                            <span class="font-medium">${model}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">安装日期</span>
+                            <span class="font-medium">${new Date().toLocaleDateString('zh-CN')}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">最后维护</span>
+                            <span class="font-medium">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex space-x-2">
+                        <button class="flex-1 py-1.5 text-center text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                            查看数据
+                        </button>
+                        <button class="flex-1 py-1.5 text-center text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">
+                            配置
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // 为新按钮添加事件监听器
+            newPoint.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const action = this.textContent.trim();
+                    const monitoringPoint = this.closest('.border').querySelector('h4').textContent;
+                    
+                    if (action === '查看数据') {
+                        showMonitoringPointData(monitoringPoint);
+                    } else if (action === '配置') {
+                        showMonitoringPointConfig(monitoringPoint);
+                    }
+                });
+            });
+            
+            monitoringPointsContainer.appendChild(newPoint);
+            
+            // 添加动画效果
+            newPoint.style.opacity = '0';
+            newPoint.style.transform = 'translateY(20px)';
+            newPoint.style.transition = 'all 0.3s ease';
+            
+            setTimeout(() => {
+                newPoint.style.opacity = '1';
+                newPoint.style.transform = 'translateY(0)';
+            }, 100);
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+    

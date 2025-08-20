@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>极端天气预警 - 茶叶生长模型系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 导航栏 -->
+    <nav class="bg-green-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-leaf text-2xl"></i>
+                <h1 class="text-xl font-bold">茶叶生长模型系统</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="/" class="hover:text-green-200 transition-colors duration-300">首页</a>
+                <a href="/tea-plants" class="hover:text-green-200 transition-colors duration-300">茶树管理</a>
+                <a href="/environmental-data" class="hover:text-green-200 transition-colors duration-300">环境监测</a>
+                <a href="/growth-model" class="hover:text-green-200 transition-colors duration-300">生长模型</a>
+                <a href="/weather-warning" class="hover:text-green-200 transition-colors duration-300 font-medium border-b-2 border-green-300 pb-1">天气预警</a>
+                <a href="/fertilizer-recommendation" class="hover:text-green-200 transition-colors duration-300">施肥推荐</a>
+                <a href="/pest-management" class="hover:text-green-200 transition-colors duration-300">病虫害管理</a>
+            </div>
+            <button class="md:hidden text-white focus:outline-none">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 移动端菜单 -->
+    <div class="md:hidden bg-green-700 hidden">
+        <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+            <a href="/" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">首页</a>
+            <a href="/tea-plants" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">茶树管理</a>
+            <a href="/environmental-data" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">环境监测</a>
+            <a href="/growth-model" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">生长模型</a>
+            <a href="/weather-warning" class="text-white bg-green-600 px-2 py-1 rounded transition-colors duration-300">天气预警</a>
+            <a href="/fertilizer-recommendation" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">施肥推荐</a>
+            <a href="/pest-management" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">病虫害管理</a>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <section class="mb-8">
+            <h2 class="text-[clamp(1.5rem,3vw,2.2rem)] font-bold text-gray-800 mb-2">极端天气预警模型</h2>
+            <p class="text-gray-600">
+                基于茶园环境监测站实时数据，通过分析茶树生长动态与气候因素之间的关系，
+                提供精准的气象灾害风险评估和预警，帮助您提前做好防范措施。
+            </p>
+        </section>
+
+        <!-- 当前风险状态 -->
+        <section class="mb-10">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">当前天气风险状态</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="flex flex-col items-center p-6 rounded-lg border-2 border-blue-100 bg-blue-50">
+                        <div class="text-4xl mb-4 text-blue-600">
+                            <i class="fa fa-thermometer-half"></i>
+                        </div>
+                        <h4 class="text-lg font-medium text-gray-800 mb-2">温度胁迫</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
+                            <div class="bg-blue-600 h-4 rounded-full" id="temp-stress-bar" style="width: 30%"></div>
+                        </div>
+                        <p class="text-2xl font-bold text-blue-600" id="temp-stress-value">3.0</p>
+                        <p class="text-sm text-gray-600">风险指数 (0-10)</p>
+                    </div>
+                    
+                    <div class="flex flex-col items-center p-6 rounded-lg border-2 border-green-100 bg-green-50">
+                        <div class="text-4xl mb-4 text-green-600">
+                            <i class="fa fa-tint"></i>
+                        </div>
+                        <h4 class="text-lg font-medium text-gray-800 mb-2">水分胁迫</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
+                            <div class="bg-green-600 h-4 rounded-full" id="moisture-stress-bar" style="width: 25%"></div>
+                        </div>
+                        <p class="text-2xl font-bold text-green-600" id="moisture-stress-value">2.5</p>
+                        <p class="text-sm text-gray-600">风险指数 (0-10)</p>
+                    </div>
+                    
+                    <div class="flex flex-col items-center p-6 rounded-lg border-2 border-purple-100 bg-purple-50">
+                        <div class="text-4xl mb-4 text-purple-600">
+                            <i class="fa fa-bolt"></i>
+                        </div>
+                        <h4 class="text-lg font-medium text-gray-800 mb-2">综合风险</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
+                            <div class="bg-purple-600 h-4 rounded-full" id="total-stress-bar" style="width: 28%"></div>
+                        </div>
+                        <p class="text-2xl font-bold text-purple-600" id="total-stress-value">2.8</p>
+                        <p class="text-sm text-gray-600">风险指数 (0-10)</p>
+                    </div>
+                </div>
+                
+                <div class="mt-8 p-4 rounded-lg bg-yellow-50 border border-yellow-200 hidden" id="warning-alert">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fa fa-exclamation-triangle text-yellow-500 text-xl mt-0.5"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h4 class="text-lg font-medium text-yellow-800">天气预警</h4>
+                            <div class="mt-2 text-sm text-yellow-700" id="warning-message">
+                                <p>预计未来48小时内将出现高温天气，可能对茶树生长造成不利影响，请提前做好防护措施。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 未来预测 -->
+        <section class="mb-10">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">未来7天天气风险预测</h3>
+                
+                <div class="h-80 mb-6">
+                    <canvas id="future-prediction-chart"></canvas>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">温度 (°C)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">湿度 (%)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">降雨量 (mm)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">风险指数</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">建议措施</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="prediction-table-body">
+                            <!-- 数据将通过JavaScript动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 应对措施建议 -->
+        <section class="mb-10">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">极端天气应对措施</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="bg-red-50 px-6 py-4 border-b border-red-100">
+                            <h4 class="font-semibold text-red-800 flex items-center">
+                                <i class="fa fa-sun-o mr-2"></i> 高温天气应对
+                            </h4>
+                        </div>
+                        <div class="p-6">
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>增加灌溉频率，保持土壤湿润但不过湿</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>必要时搭建遮阳网，减少强光直射</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>避免在高温时段进行修剪等农事操作</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>可喷施抗蒸腾剂，减少水分流失</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
+                            <h4 class="font-semibold text-blue-800 flex items-center">
+                                <i class="fa fa-tint mr-2"></i> 暴雨天气应对
+                            </h4>
+                        </div>
+                        <div class="p-6">
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>检查并疏通排水系统，防止积水</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>暴雨前加固茶树根基，防止倒伏</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>雨后及时松土，增加土壤透气性</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>密切关注病虫害发生情况，及时防治</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="bg-purple-50 px-6 py-4 border-b border-purple-100">
+                            <h4 class="font-semibold text-purple-800 flex items-center">
+                                <i class="fa fa-snowflake-o mr-2"></i> 低温霜冻应对
+                            </h4>
+                        </div>
+                        <div class="p-6">
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>霜冻前进行灌溉，提高土壤温度</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>采用熏烟法，减少地面热量散失</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>必要时覆盖保温材料保护茶树</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>霜冻后及时喷施叶面肥，恢复树势</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="bg-yellow-50 px-6 py-4 border-b border-yellow-100">
+                            <h4 class="font-semibold text-yellow-800 flex items-center">
+                                <i class="fa fa-bolt mr-2"></i> 大风天气应对
+                            </h4>
+                        </div>
+                        <div class="p-6">
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>加固茶树，必要时设置防风障</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>修剪过高枝条，降低风阻</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>检查并加固茶园设施，防止损坏</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>大风后及时清理断枝，检查茶树损伤情况</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fa fa-leaf mr-2"></i>茶叶生长模型系统
+                    </h3>
+                    <p class="text-gray-400">
+                        利用先进的数据分析和人工智能技术，为茶园管理提供全方位的智能解决方案，
+                        助力茶叶产业高质量发展。
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">快速链接</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white transition-colors duration-300">首页</a></li>
+                        <li><a href="/growth-model" class="text-gray-400 hover:text-white transition-colors duration-300">生长模型</a></li>
+                        <li><a href="/weather-warning" class="text-gray-400 hover:text-white transition-colors duration-300">天气预警</a></li>
+                        <li><a href="/fertilizer-recommendation" class="text-gray-400 hover:text-white transition-colors duration-300">施肥推荐</a></li>
+                        <li><a href="/pest-management" class="text-gray-400 hover:text-white transition-colors duration-300">病虫害管理</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">联系我们</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-envelope mr-2"></i> contact@teagrowthsystem.com
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-phone mr-2"></i> +86 123 4567 8910
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-map-marker mr-2"></i> 中国茶叶研究所
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500">
+                <p>&copy; 2023 茶叶生长模型系统 版权所有</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 移动端菜单切换
+        document.querySelector('.fa-bars').parentElement.addEventListener('click', function() {
+            document.querySelector('.md\\:hidden.bg-green-700').classList.toggle('hidden');
+        });
+
+        // 获取天气胁迫数据
+        fetch('/api/weather-stress')
+            .then(response => response.json())
+            .then(data => {
+                // 更新当前风险值
+                const totalRisk = data.current_risk;
+                const tempRisk = Math.max(0, Math.min(10, totalRisk * 0.7 + Math.random() * 2 - 1));
+                const moistureRisk = Math.max(0, Math.min(10, totalRisk * 0.6 + Math.random() * 2 - 1));
+                
+                document.getElementById('temp-stress-value').textContent = tempRisk.toFixed(1);
+                document.getElementById('temp-stress-bar').style.width = `${tempRisk * 10}%`;
+                
+                document.getElementById('moisture-stress-value').textContent = moistureRisk.toFixed(1);
+                document.getElementById('moisture-stress-bar').style.width = `${moistureRisk * 10}%`;
+                
+                document.getElementById('total-stress-value').textContent = totalRisk.toFixed(1);
+                document.getElementById('total-stress-bar').style.width = `${totalRisk * 10}%`;
+                
+                // 显示预警信息（如果有）
+                if (data.warning) {
+                    document.getElementById('warning-alert').classList.remove('hidden');
+                }
+                
+                // 更新未来预测图表
+                const ctx = document.getElementById('future-prediction-chart').getContext('2d');
+                
+                const dates = data.future_predictions.map(item => item.date);
+                const temperatures = data.future_predictions.map(item => item.temperature);
+                const risks = data.future_predictions.map(item => item.risk_level);
+                
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [
+                            {
+                                label: '温度 (°C)',
+                                data: temperatures,
+                                borderColor: '#FF6384',
+                                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                                tension: 0.3,
+                                fill: false,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: '风险指数',
+                                data: risks,
+                                borderColor: '#9B59B6',
+                                backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: '温度 (°C)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: '风险指数 (0-10)'
+                                },
+                                min: 0,
+                                max: 10,
+                                grid: {
+                                    drawOnChartArea: false
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // 填充预测表格
+                const tableBody = document.getElementById('prediction-table-body');
+                tableBody.innerHTML = '';
+                
+                data.future_predictions.forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    // 根据风险等级确定颜色
+                    let riskColor = 'text-green-600';
+                    if (item.risk_level > 7) {
+                        riskColor = 'text-red-600 font-bold';
+                    } else if (item.risk_level > 4) {
+                        riskColor = 'text-yellow-600';
+                    }
+                    
+                    // 生成建议措施
+                    let suggestion = '当前风险较低，保持常规管理';
+                    if (item.risk_level > 7) {
+                        suggestion = '风险较高，建议采取紧急防护措施';
+                    } else if (item.risk_level > 4) {
+                        suggestion = '风险中等，注意关注天气变化';
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.date}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.temperature}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.humidity}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.rainfall}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${riskColor}">${item.risk_level}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${suggestion}</td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            });
+    </script>
+</body>
+</html>

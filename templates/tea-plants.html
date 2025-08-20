@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>茶树管理 - 茶叶生长模型系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+          <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+              <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+        <script src="{{ url_for('static', filename='tea-plants.js') }}"></script>
+        </head>
+<body class="bg-gray-50 font-sans">
+    <!-- 导航栏 -->
+    <nav class="bg-green-800 text-white shadow-lg relative z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-leaf text-2xl"></i>
+                <h1 class="text-xl font-bold">茶叶生长模型系统</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="/" class="hover:text-green-200 transition-colors duration-300">首页</a>
+                <a href="/tea-plants" class="hover:text-green-200 transition-colors duration-300 font-medium border-b-2 border-green-300 pb-1">茶树管理</a>
+                <a href="/environmental-data" class="hover:text-green-200 transition-colors duration-300">环境监测</a>
+                <a href="/growth-model" class="hover:text-green-200 transition-colors duration-300">生长模型</a>
+                <a href="/weather-warning" class="hover:text-green-200 transition-colors duration-300">天气预警</a>
+                <a href="/fertilizer-recommendation" class="hover:text-green-200 transition-colors duration-300">施肥推荐</a>
+                <a href="/pest-management" class="hover:text-green-200 transition-colors duration-300">病虫害管理</a>
+            </div>
+            <button class="md:hidden text-white focus:outline-none">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 移动端菜单 -->
+    <div class="md:hidden bg-green-700 hidden">
+        <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+            <a href="/" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">首页</a>
+            <a href="/tea-plants" class="text-white bg-green-600 px-2 py-1 rounded transition-colors duration-300">茶树管理</a>
+            <a href="/environmental-data" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">环境监测</a>
+            <a href="/growth-model" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">生长模型</a>
+            <a href="/weather-warning" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">天气预警</a>
+            <a href="/fertilizer-recommendation" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">施肥推荐</a>
+            <a href="/pest-management" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">病虫害管理</a>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <section class="mb-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between">
+                <div>
+                    <h2 class="text-[clamp(1.5rem,3vw,2.2rem)] font-bold text-gray-800 mb-2">茶树全生命周期管理</h2>
+                    <p class="text-gray-600">
+                        记录和分析茶叶从幼苗期到衰老期的全生命周期数据，包括各阶段生物特征、生长环境和农事活动，
+                        实现科学管理和精准决策。
+                    </p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <button id="addTeaPlantBtn" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors duration-300 text-sm flex items-center">
+                        <i class="fa fa-plus mr-2"></i> 添加新茶树
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 茶园概览 -->
+        <section class="mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">茶园概览</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8" id="overview-cards">
+                    <div class="bg-green-50 rounded-lg p-5 border border-green-100">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                <i class="fa fa-tree text-green-600"></i>
+                            </div>
+                            <h4 class="font-medium text-gray-800">总茶树数量</h4>
+                        </div>
+                        <p id="overview-total" class="text-3xl font-bold text-gray-800">-</p>
+                        <p id="overview-mom" class="text-sm text-green-600 mt-1 flex items-center">
+                            <i class="fa fa-arrow-up mr-1"></i> 较上月增长 -
+                        </p>
+                    </div>
+                    
+                    <div class="bg-blue-50 rounded-lg p-5 border border-blue-100">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                <i class="fa fa-leaf text-blue-600"></i>
+                            </div>
+                            <h4 class="font-medium text-gray-800">成年期茶树</h4>
+                        </div>
+                        <p id="count-adult" class="text-3xl font-bold text-gray-800">-</p>
+                        <p id="pct-adult" class="text-sm text-gray-600 mt-1">占比 -%</p>
+                    </div>
+                    
+                    <div class="bg-purple-50 rounded-lg p-5 border border-purple-100">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                                <i class="fa fa-pagelines text-purple-600"></i>
+                            </div>
+                            <h4 class="font-medium text-gray-800">幼年期茶树</h4>
+                        </div>
+                        <p id="count-juvenile" class="text-3xl font-bold text-gray-800">-</p>
+                        <p id="pct-juvenile" class="text-sm text-gray-600 mt-1">占比 -%</p>
+                    </div>
+                    
+                    <div class="bg-yellow-50 rounded-lg p-5 border border-yellow-100">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                                <i class="fa fa-seedling text-yellow-600"></i>
+                            </div>
+                            <h4 class="font-medium text-gray-800">幼苗期茶树</h4>
+                        </div>
+                        <p id="count-seedling" class="text-3xl font-bold text-gray-800">-</p>
+                        <p id="pct-seedling" class="text-sm text-gray-600 mt-1">占比 -%</p>
+                    </div>
+                    
+                    <div class="bg-red-50 rounded-lg p-5 border border-red-100">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                                <i class="fa fa-tree text-red-600"></i>
+                            </div>
+                            <h4 class="font-medium text-gray-800">衰老期茶树</h4>
+                        </div>
+                        <p id="count-senescent" class="text-3xl font-bold text-gray-800">-</p>
+                        <p id="pct-senescent" class="text-sm text-gray-600 mt-1">占比 -%</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2">
+                        <h4 class="font-medium text-gray-800 mb-4">各生长阶段茶树分布</h4>
+                        <div class="h-64">
+                            <canvas id="growth-stages-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-4">产量预测趋势</h4>
+                        <div class="h-64">
+                            <canvas id="yield-forecast-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 茶树生长阶段详情 -->
+        <section class="mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">茶树生长阶段详情</h3>
+                
+                <!-- 生长阶段选择器 -->
+                <div class="flex justify-center mb-8 space-x-4" id="stage-buttons">
+                    <button class="px-6 py-3 bg-green-600 text-white rounded-lg font-medium transition-all duration-300 hover:bg-green-700 shadow-md" data-stage="seedling">幼苗期</button>
+                    <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium transition-all duration-300 hover:bg-gray-200 shadow-md" data-stage="juvenile">幼年期</button>
+                    <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium transition-all duration-300 hover:bg-gray-200 shadow-md" data-stage="adult">成年期</button>
+                    <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium transition-all duration-300 hover:bg-gray-200 shadow-md" data-stage="senescent">衰老期</button>
+                </div>
+                
+                <!-- 幼苗期 -->
+                <div id="seedling-stage" class="space-y-6" style="display: block;">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- 特征描述 -->
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fa fa-seedling text-white text-xl"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-gray-800">幼苗期特征</h4>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2">生长指标</h5>
+                                    <p class="text-gray-600">高度 10-30cm，主干直径 0.5-1.5cm</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2">主要特征</h5>
+                                    <ul class="space-y-2 text-gray-600">
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                            <span>叶片数量较少，一般为4-8片真叶</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                            <span>根系初步发育，主根明显，侧根较少</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                            <span>生长速度较慢，月均增高3-5cm</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                            <span>抗逆性较弱，对环境变化敏感</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 管理要点 -->
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fa fa-cogs text-white text-xl"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-gray-800">管理要点</h4>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-tint text-blue-500 mr-2"></i>灌溉管理
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">保持土壤湿润但不过湿，采用喷灌方式，避免水流直接冲击幼苗。每周浇水2-3次。</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-cutlery text-green-500 mr-2"></i>施肥管理
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">出苗后1个月开始追肥，以稀薄氮肥为主，浓度为0.2-0.3%。每2-3周一次。</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-shield text-yellow-500 mr-2"></i>病虫害防治
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">幼苗期易受根腐病、蚜虫侵害，定期检查，发现病株及时拔除并消毒。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 幼年期 -->
+                <div id="juvenile-stage" class="space-y-6" style="display: none;">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- 特征描述 -->
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fa fa-tree text-white text-xl"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-gray-800">幼年期特征</h4>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2">生长指标</h5>
+                                    <p class="text-gray-600">高度 30-120cm，主干直径 1.5-5cm</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2">主要特征</h5>
+                                    <ul class="space-y-2 text-gray-600">
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-purple-500 mt-1 mr-2"></i>
+                                            <span>叶片数量增加，一般为8-20片真叶</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-purple-500 mt-1 mr-2"></i>
+                                            <span>根系发育完善，侧根发达，形成完整根系</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-purple-500 mt-1 mr-2"></i>
+                                            <span>生长速度加快，月均增高5-10cm</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-purple-500 mt-1 mr-2"></i>
+                                            <span>开始形成分枝，树冠逐渐扩大</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-purple-500 mt-1 mr-2"></i>
+                                            <span>抗逆性增强，适应性提高</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 管理要点 -->
+                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fa fa-tasks text-white text-xl"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-gray-800">管理要点</h4>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-tint text-blue-500 mr-2"></i>灌溉管理
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">根据天气情况调整灌溉频率，保持土壤湿润。采用沟灌或滴灌方式，避免积水。</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-leaf text-green-500 mr-2"></i>施肥管理
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">氮磷钾配合施用，氮肥为主，磷钾肥为辅。每2-3个月追肥一次，促进枝叶生长。</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-cut text-orange-500 mr-2"></i>修剪管理
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">进行轻度修剪，去除病弱枝、交叉枝，促进分枝发育。保持树形整齐。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 成年期 -->
+                <div id="adult-stage" class="space-y-6" style="display: none;">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- 特征描述 -->
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fa fa-leaf text-white text-xl"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-gray-800">成年期特征</h4>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2">生长指标</h5>
+                                    <p class="text-gray-600">高度 120-200cm，主干直径 5-15cm</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2">主要特征</h5>
+                                    <ul class="space-y-2 text-gray-600">
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                            <span>树冠丰满，分枝发达，叶片茂密</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                            <span>根系发达，吸收能力强，抗旱抗寒</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                            <span>开始开花结果，进入丰产期</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                            <span>抗逆性强，适应性广，管理相对简单</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                            <span>产量稳定，品质优良，经济效益高</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 管理要点 -->
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fa fa-chart-line text-white text-xl"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-gray-800">管理要点</h4>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-tint text-blue-500 mr-2"></i>灌溉管理
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">根据天气和土壤墒情灵活调整灌溉。春季萌芽期和夏季高温期适当增加灌溉。</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-cutlery text-green-500 mr-2"></i>施肥管理
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">根据产量和品质要求科学施肥。春季以氮肥为主，夏季氮磷钾配合，秋季增施磷钾肥。</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-scissors text-orange-500 mr-2"></i>修剪管理
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">每年进行轻修剪和深修剪交替进行。轻修剪保持树形，深修剪更新树冠。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 衰老期 -->
+                <div id="senescent-stage" class="space-y-6" style="display: none;">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- 特征描述 -->
+                        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fa fa-tree text-white text-xl"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-gray-800">衰老期特征</h4>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2">生长指标</h5>
+                                    <p class="text-gray-600">高度 150-180cm，主干直径 10-20cm</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2">主要特征</h5>
+                                    <ul class="space-y-2 text-gray-600">
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-red-500 mt-1 mr-2"></i>
+                                            <span>树势衰弱，新梢生长缓慢，产量下降</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-red-500 mt-1 mr-2"></i>
+                                            <span>根系老化，吸收能力减弱，抗旱性差</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-red-500 mt-1 mr-2"></i>
+                                            <span>病虫害易发，抗逆性明显下降</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-red-500 mt-1 mr-2"></i>
+                                            <span>品质下降，经济效益降低</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fa fa-check-circle text-red-500 mt-1 mr-2"></i>
+                                            <span>需要特殊管理措施延长经济寿命</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 管理要点 -->
+                        <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fa fa-shield text-white text-xl"></i>
+                                </div>
+                                <h4 class="text-xl font-semibold text-gray-800">管理要点</h4>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-tint text-blue-500 mr-2"></i>灌溉管理
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">加强水分管理，保持土壤湿润。采用小水勤灌，避免大水漫灌，防止根系窒息。</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-cutlery text-green-500 mr-2"></i>施肥管理
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">以有机肥为主，配合少量无机肥。增加磷钾肥比例，促进根系发育，增强抗逆性。</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                                        <i class="fa fa-scissors text-orange-500 mr-2"></i>修剪管理
+                                    </h5>
+                                    <p class="text-gray-600 text-sm">进行重修剪或台刈更新。去除衰老枝条，促进新梢萌发，恢复树势。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 茶树列表 -->
+        <section class="mb-10">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800">茶树列表</h3>
+                    <div class="relative">
+                        <input type="text" placeholder="搜索茶树编号或区域..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <i class="fa fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">茶树编号</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">种植位置</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">生长阶段</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">种植日期</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">当前高度</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">健康状态</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">上次施肥</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+                
+                <div class="flex justify-between items-center mt-6">
+                    <p id="list-summary" class="text-sm text-gray-600">显示 0 至 0 条，共 0 条</p>
+                    <div class="flex space-x-1">
+                        <button class="px-3 py-1 border border-gray-300 rounded bg-white text-gray-500 hover:bg-gray-50">上一页</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded bg-green-600 text-white">1</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50">2</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50">3</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded bg-white text-gray-500 hover:bg-gray-50">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fa fa-leaf mr-2"></i>茶叶生长模型系统
+                    </h3>
+                    <p class="text-gray-400">
+                        利用先进的数据分析和人工智能技术，为茶园管理提供全方位的智能解决方案，
+                        助力茶叶产业高质量发展。
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">快速链接</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white transition-colors duration-300">首页</a></li>
+                        <li><a href="/growth-model" class="text-gray-400 hover:text-white transition-colors duration-300">生长模型</a></li>
+                        <li><a href="/weather-warning" class="text-gray-400 hover:text-white transition-colors duration-300">天气预警</a></li>
+                        <li><a href="/fertilizer-recommendation" class="text-gray-400 hover:text-white transition-colors duration-300">施肥推荐</a></li>
+                        <li><a href="/pest-management" class="text-gray-400 hover:text-white transition-colors duration-300">病虫害管理</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">联系我们</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-envelope mr-2"></i> contact@teagrowthsystem.com
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-phone mr-2"></i> +86 123 4567 8910
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-map-marker mr-2"></i> 中国茶叶研究所
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500">
+                <p>&copy; 2024 茶叶生长模型系统 版权所有</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 添加茶树模态框 -->
+    <div id="addTeaPlantModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">添加新茶树</h3>
+                <form id="addTeaPlantForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">茶树品种</label>
+                        <input type="text" id="variety" name="variety" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">种植日期</label>
+                        <input type="date" id="planting_date" name="planting_date" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">生长阶段</label>
+                        <select id="current_stage" name="current_stage" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <option value="">请选择生长阶段</option>
+                            <option value="幼苗期">幼苗期</option>
+                            <option value="幼年期">幼年期</option>
+                            <option value="成年期">成年期</option>
+                            <option value="衰老期">衰老期</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">高度 (cm)</label>
+                            <input type="number" id="height" name="height" step="0.1" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">冠幅 (cm)</label>
+                            <input type="number" id="crown_width" name="crown_width" step="0.1" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">种植区域</label>
+                            <select id="location_area" name="location_area" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">请选择区域</option>
+                                <option value="A区">A区</option>
+                                <option value="B区">B区</option>
+                                <option value="C区">C区</option>
+                                <option value="D区">D区</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">具体位置</label>
+                            <input type="text" id="location_row" name="location_row" placeholder="如: 1排, 2排" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">叶片数量</label>
+                        <input type="number" id="leaf_count" name="leaf_count" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">取消</button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">添加</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑茶树模态框 -->
+    <div id="editTeaPlantModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">编辑茶树信息</h3>
+                <form id="editTeaPlantForm">
+                    <input type="hidden" id="edit_plant_id" name="plant_id">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">茶树品种</label>
+                        <input type="text" id="edit_variety" name="variety" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">种植日期</label>
+                        <input type="date" id="edit_planting_date" name="planting_date" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">生长阶段</label>
+                        <select id="edit_current_stage" name="current_stage" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <option value="">请选择生长阶段</option>
+                            <option value="幼苗期">幼苗期</option>
+                            <option value="幼年期">幼年期</option>
+                            <option value="成年期">成年期</option>
+                            <option value="衰老期">衰老期</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">高度 (cm)</label>
+                            <input type="number" id="edit_height" name="height" step="0.1" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">冠幅 (cm)</label>
+                            <input type="number" id="edit_crown_width" name="crown_width" step="0.1" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">种植区域</label>
+                            <select id="edit_location_area" name="location_area" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">请选择区域</option>
+                                <option value="A区">A区</option>
+                                <option value="B区">B区</option>
+                                <option value="C区">C区</option>
+                                <option value="D区">D区</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">具体位置</label>
+                            <input type="text" id="edit_location_row" name="location_row" placeholder="如: 1排, 2排" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">叶片数量</label>
+                        <input type="number" id="edit_leaf_count" name="leaf_count" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">取消</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 茶树详情模态框 -->
+    <div id="viewTeaPlantModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">茶树详情</h3>
+                <div id="teaPlantDetails" class="space-y-4">
+                    <!-- 详情内容将通过JavaScript动态填充 -->
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button onclick="closeViewModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 茶树生长模型分析模态框 -->
+    <div id="growthAnalysisModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-4/5 max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">茶树生长模型分析</h3>
+                <div id="growthAnalysisContent" class="space-y-6">
+                    <!-- 分析内容将通过JavaScript动态填充 -->
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button onclick="closeGrowthAnalysisModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 移动端菜单切换
+        document.querySelector('.fa-bars').parentElement.addEventListener('click', function() {
+            document.querySelector('.md\\:hidden.bg-green-700').classList.toggle('hidden');
+        });
+
+        let stagesChart;
+        function renderStagesChart(stageCounts) {
+            const stagesCtx = document.getElementById('growth-stages-chart').getContext('2d');
+            const dataArr = [
+                stageCounts['幼苗期'] || 0,
+                stageCounts['幼年期'] || 0,
+                stageCounts['成年期'] || 0,
+                stageCounts['衰老期'] || 0
+            ];
+            if (stagesChart) {
+                stagesChart.data.datasets[0].data = dataArr;
+                stagesChart.update();
+                return;
+            }
+            stagesChart = new Chart(stagesCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['幼苗期 (0-6个月)', '幼年期 (6-36个月)', '成年期 (3-20年)', '衰老期 (20年以上)'],
+                    datasets: [{
+                        data: dataArr,
+                        backgroundColor: [
+                            '#FACC15',
+                            '#A855F7',
+                            '#3B82F6',
+                            '#9CA3AF'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        // 产量预测趋势图表
+        const yieldCtx = document.getElementById('yield-forecast-chart').getContext('2d');
+        new Chart(yieldCtx, {
+            type: 'line',
+            data: {
+                labels: ['6月', '7月', '8月', '9月', '10月', '11月'],
+                datasets: [{
+                    label: '预计产量 (kg/亩)',
+                    data: [0, 5, 12, 20, 28, 35],
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // 茶树管理功能
+        let teaPlants = [];
+
+        // 页面加载时获取茶园概览与茶树列表
+        window.addEventListener('load', function() {
+            loadOverview();
+            loadTeaPlants();
+        });
+
+        async function loadOverview() {
+            try {
+                const res = await fetch('/api/tea-garden-overview');
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || '获取茶园概览失败');
+                }
+                // 卡片
+                document.getElementById('overview-total').textContent = data.total;
+                const momEl = document.getElementById('overview-mom');
+                const mom = data.mom_growth_percent;
+                momEl.innerHTML = `${mom >= 0 ? '<i class="fa fa-arrow-up mr-1"></i>' : '<i class="fa fa-arrow-down mr-1"></i>'} 较上月${mom >= 0 ? '增长' : '下降'} ${Math.abs(mom).toFixed(1)}%`;
+                document.getElementById('count-adult').textContent = data.stages['成年期'] || 0;
+                document.getElementById('pct-adult').textContent = `占比 ${data.stage_percentages['成年期'] || 0}%`;
+                document.getElementById('count-juvenile').textContent = data.stages['幼年期'] || 0;
+                document.getElementById('pct-juvenile').textContent = `占比 ${data.stage_percentages['幼年期'] || 0}%`;
+                document.getElementById('count-seedling').textContent = data.stages['幼苗期'] || 0;
+                document.getElementById('pct-seedling').textContent = `占比 ${data.stage_percentages['幼苗期'] || 0}%`;
+                document.getElementById('count-senescent').textContent = data.stages['衰老期'] || 0;
+                document.getElementById('pct-senescent').textContent = `占比 ${data.stage_percentages['衰老期'] || 0}%`;
+                // 图表
+                renderStagesChart(data.stages || {});
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // 添加茶树按钮事件
+        document.getElementById('addTeaPlantBtn').addEventListener('click', function() {
+            document.getElementById('addTeaPlantModal').classList.remove('hidden');
+        });
+
+        // 添加茶树表单提交
+        document.getElementById('addTeaPlantForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            addTeaPlant();
+        });
+
+        // 编辑茶树表单提交
+        document.getElementById('editTeaPlantForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            updateTeaPlant();
+        });
+
+        // 加载茶树列表
+        async function loadTeaPlants() {
+            try {
+                const response = await fetch('/api/tea-plants');
+                const data = await response.json();
+                teaPlants = data.plants;
+                renderTeaPlantsTable();
+            } catch (error) {
+                console.error('加载茶树列表失败:', error);
+                alert('加载茶树列表失败');
+            }
+        }
+
+        // 渲染茶树列表表格
+        function renderTeaPlantsTable() {
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = '';
+
+            teaPlants.forEach(plant => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${plant.plant_id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${plant.location || '未设置'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            ${plant.current_stage}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${plant.planting_date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${plant.height}cm</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            ${plant.health_status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${plant.last_fertilized || '未记录'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex flex-wrap gap-1">
+                            <button onclick="viewTeaPlant(${plant.id})" class="text-green-600 hover:text-green-900 text-xs">详情</button>
+                            <button onclick="view3D(${plant.id})" class="text-gray-700 hover:text-gray-900 text-xs">3D</button>
+                            <button onclick="analyzeTeaPlant(${plant.id})" class="text-purple-600 hover:text-purple-900 text-xs">生长分析</button>
+                            <button onclick="editTeaPlant(${plant.id})" class="text-blue-600 hover:text-blue-900 text-xs">编辑</button>
+                            <button onclick="goToFertilizationRecords(${plant.id})" class="text-orange-600 hover:text-orange-900 text-xs">施肥</button>
+                            <button onclick="goToAgriculturalPlans(${plant.id})" class="text-indigo-600 hover:text-indigo-900 text-xs">计划</button>
+                            <button onclick="deleteTeaPlant(${plant.id})" class="text-red-600 hover:text-red-900 text-xs">删除</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // 汇总
+            const total = teaPlants.length;
+            const summary = document.getElementById('list-summary');
+            summary.textContent = `显示 1 至 ${total} 条，共 ${total} 条`;
+        }
+
+        // 添加茶树
+        async function addTeaPlant() {
+            const formData = new FormData(document.getElementById('addTeaPlantForm'));
+            const data = {
+                variety: formData.get('variety'),
+                planting_date: formData.get('planting_date'),
+                current_stage: formData.get('current_stage'),
+                height: parseFloat(formData.get('height')),
+                crown_width: parseFloat(formData.get('crown_width')),
+                leaf_count: parseInt(formData.get('leaf_count')),
+                location_area: formData.get('location_area'),
+                location_row: formData.get('location_row')
+            };
+
+            try {
+                const response = await fetch('/api/tea-plants', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('茶树添加成功！');
+                    closeAddModal();
+                    loadTeaPlants();
+                } else {
+                    alert('添加失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('添加茶树失败:', error);
+                alert('添加茶树失败');
+            }
+        }
+
+        // 编辑茶树
+        async function editTeaPlant(plantId) {
+            try {
+                const response = await fetch(`/api/tea-plants/${plantId}`);
+                const plant = await response.json();
+                
+                // 填充表单
+                document.getElementById('edit_plant_id').value = plant.id;
+                document.getElementById('edit_variety').value = plant.variety;
+                document.getElementById('edit_planting_date').value = plant.planting_date;
+                document.getElementById('edit_current_stage').value = plant.current_stage;
+                document.getElementById('edit_height').value = plant.height;
+                document.getElementById('edit_crown_width').value = plant.crown_width;
+                document.getElementById('edit_leaf_count').value = plant.leaf_count;
+                document.getElementById('edit_location_area').value = plant.location_area || '';
+                document.getElementById('edit_location_row').value = plant.location_row || '';
+                
+                document.getElementById('editTeaPlantModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('获取茶树信息失败:', error);
+                alert('获取茶树信息失败');
+            }
+        }
+
+        // 更新茶树
+        async function updateTeaPlant() {
+            const plantId = document.getElementById('edit_plant_id').value;
+            const formData = new FormData(document.getElementById('editTeaPlantForm'));
+            const data = {
+                variety: formData.get('variety'),
+                planting_date: formData.get('planting_date'),
+                current_stage: formData.get('current_stage'),
+                height: parseFloat(formData.get('height')),
+                crown_width: parseFloat(formData.get('crown_width')),
+                leaf_count: parseInt(formData.get('leaf_count')),
+                location_area: formData.get('location_area'),
+                location_row: formData.get('location_row')
+            };
+
+            try {
+                const response = await fetch(`/api/tea-plants/${plantId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('茶树信息更新成功！');
+                    closeEditModal();
+                    loadTeaPlants();
+                } else {
+                    alert('更新失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('更新茶树失败:', error);
+                alert('更新茶树失败');
+            }
+        }
+
+        // 删除茶树
+        async function deleteTeaPlant(plantId) {
+            if (!confirm('确定要删除这个茶树吗？此操作不可恢复。')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/tea-plants/${plantId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('茶树删除成功！');
+                    loadTeaPlants();
+                } else {
+                    alert('删除失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('删除茶树失败:', error);
+                alert('删除茶树失败');
+            }
+        }
+
+        // 查看茶树详情
+        async function viewTeaPlant(plantId) {
+            try {
+                const response = await fetch(`/api/tea-plants/${plantId}`);
+                const plant = await response.json();
+                
+                const detailsHtml = `
+                    <div class="space-y-3">
+                        <div>
+                            <span class="font-medium text-gray-700">茶树编号:</span>
+                            <span class="ml-2 text-gray-900">${plant.plant_id}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">品种:</span>
+                            <span class="ml-2 text-gray-900">${plant.variety}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">位置:</span>
+                            <span class="ml-2 text-gray-900">${plant.location || '未设置'}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">种植日期:</span>
+                            <span class="ml-2 text-gray-900">${plant.planting_date}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">生长阶段:</span>
+                            <span class="ml-2 text-gray-900">${plant.current_stage}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">高度:</span>
+                            <span class="ml-2 text-gray-900">${plant.height} cm</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">冠幅:</span>
+                            <span class="ml-2 text-gray-900">${plant.crown_width} cm</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">叶片数量:</span>
+                            <span class="ml-2 text-gray-900">${plant.leaf_count}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">上次施肥:</span>
+                            <span class="ml-2 text-gray-900">${plant.last_fertilized || '未记录'}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">最后更新:</span>
+                            <span class="ml-2 text-gray-900">${plant.last_updated}</span>
+                        </div>
+                        ${plant.latest_record ? `
+                        <div class="border-t pt-3">
+                            <h4 class="font-medium text-gray-700 mb-2">最新生长记录</h4>
+                            <div class="text-sm text-gray-600">
+                                <div>阶段: ${plant.latest_record.stage}</div>
+                                <div>高度: ${plant.latest_record.height} cm</div>
+                                <div>叶片状况: ${plant.latest_record.leaf_condition}</div>
+                                <div>记录时间: ${plant.latest_record.timestamp}</div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${plant.latest_activity ? `
+                        <div class="border-t pt-3">
+                            <h4 class="font-medium text-gray-700 mb-2">最新农事活动</h4>
+                            <div class="text-sm text-gray-600">
+                                <div>活动类型: ${plant.latest_activity.activity_type}</div>
+                                <div>描述: ${plant.latest_activity.description}</div>
+                                <div>活动时间: ${plant.latest_activity.timestamp}</div>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                document.getElementById('teaPlantDetails').innerHTML = detailsHtml;
+                document.getElementById('viewTeaPlantModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('获取茶树详情失败:', error);
+                alert('获取茶树详情失败');
+            }
+        }
+
+        // 茶树生长模型分析
+        async function analyzeTeaPlant(plantId) {
+            try {
+                const response = await fetch(`/api/tea-plants/${plantId}/growth-analysis`);
+                const analysis = await response.json();
+                
+                const analysisHtml = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- 茶树基本信息 -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium text-gray-800 mb-3">茶树基本信息</h4>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="font-medium">编号:</span> ${analysis.plant_info.plant_id}</div>
+                                <div><span class="font-medium">品种:</span> ${analysis.plant_info.variety}</div>
+                                <div><span class="font-medium">位置:</span> ${analysis.plant_info.location}</div>
+                                <div><span class="font-medium">生长阶段:</span> ${analysis.plant_info.current_stage}</div>
+                                <div><span class="font-medium">高度:</span> ${analysis.plant_info.height} cm</div>
+                                <div><span class="font-medium">冠幅:</span> ${analysis.plant_info.crown_width} cm</div>
+                                <div><span class="font-medium">叶片数量:</span> ${analysis.plant_info.leaf_count}</div>
+                            </div>
+                        </div>
+
+                        <!-- 生长指标 -->
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-medium text-gray-800 mb-3">生长指标</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium">健康评分</span>
+                                        <span class="text-sm">${analysis.growth_metrics.health_score}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: ${analysis.growth_metrics.health_score}%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium">生长速率</span>
+                                        <span class="text-sm">${analysis.growth_metrics.growth_rate} cm/天</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium">种植天数</span>
+                                        <span class="text-sm">${analysis.growth_metrics.days_since_planting} 天</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 生长阶段分析 -->
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-medium text-gray-800 mb-3">生长阶段分析</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium">当前阶段</span>
+                                        <span class="text-sm">${analysis.stage_analysis.current_stage}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: ${analysis.stage_analysis.stage_progress}%"></div>
+                                    </div>
+                                    <div class="text-xs text-gray-600 mt-1">阶段进度: ${Math.round(analysis.stage_analysis.stage_progress)}%</div>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium">下一阶段:</span>
+                                    <span class="text-sm ml-2">${analysis.stage_analysis.next_stage}</span>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium">预计到达下一阶段:</span>
+                                    <span class="text-sm ml-2">${analysis.stage_analysis.days_to_next_stage} 天</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 环境适宜性 -->
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <h4 class="font-medium text-gray-800 mb-3">环境适宜性</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium">温度适宜性</span>
+                                        <span class="text-sm">${analysis.environment_suitability.temperature}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-red-500 h-2 rounded-full" style="width: ${analysis.environment_suitability.temperature}%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium">湿度适宜性</span>
+                                        <span class="text-sm">${analysis.environment_suitability.humidity}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: ${analysis.environment_suitability.humidity}%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium">土壤湿度</span>
+                                        <span class="text-sm">${analysis.environment_suitability.soil_moisture}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-teal-500 h-2 rounded-full" style="width: ${analysis.environment_suitability.soil_moisture}%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium">土壤pH</span>
+                                        <span class="text-sm">${analysis.environment_suitability.soil_ph}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-purple-500 h-2 rounded-full" style="width: ${analysis.environment_suitability.soil_ph}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 产量预测 -->
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h4 class="font-medium text-gray-800 mb-3">产量预测 (kg/株)</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <span class="text-sm font-medium">当年产量:</span>
+                                    <span class="text-sm ml-2">${analysis.yield_prediction.current_year} kg</span>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium">明年产量:</span>
+                                    <span class="text-sm ml-2">${analysis.yield_prediction.next_year} kg</span>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium">最大潜力:</span>
+                                    <span class="text-sm ml-2">${analysis.yield_prediction.max_potential} kg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 管理建议 -->
+                        <div class="lg:col-span-2 bg-red-50 p-4 rounded-lg">
+                            <h4 class="font-medium text-gray-800 mb-3">管理建议</h4>
+                            <div class="space-y-2">
+                                ${analysis.management_suggestions.map(suggestion => `
+                                    <div class="flex items-start p-3 bg-white rounded border-l-4 ${suggestion.type === 'warning' ? 'border-red-500' : 'border-blue-500'}">
+                                        <div class="flex-shrink-0">
+                                            <i class="fa ${suggestion.type === 'warning' ? 'fa-exclamation-triangle text-red-500' : 'fa-info-circle text-blue-500'}"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h5 class="text-sm font-medium ${suggestion.type === 'warning' ? 'text-red-800' : 'text-blue-800'}">${suggestion.title}</h5>
+                                            <p class="text-sm ${suggestion.type === 'warning' ? 'text-red-700' : 'text-blue-700'}">${suggestion.description}</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('growthAnalysisContent').innerHTML = analysisHtml;
+                document.getElementById('growthAnalysisModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('获取茶树生长分析失败:', error);
+                alert('获取茶树生长分析失败');
+            }
+        }
+
+        // 跳转到施肥记录页面
+        function goToFertilizationRecords(plantId) {
+            window.location.href = `/fertilization-records/${plantId}`;
+        }
+
+        // 跳转到农事计划页面
+        function goToAgriculturalPlans(plantId) {
+            window.location.href = `/agricultural-plans/${plantId}`;
+        }
+
+        // 跳转到生长模型分析页面
+        function analyzeTeaPlant(plantId) {
+            window.location.href = `/growth-model-analysis/${plantId}`;
+        }
+
+        // 跳转到3D可视化
+        function view3D(plantId) {
+            window.location.href = `/tea-plants/${plantId}/3d-view`;
+        }
+
+        // 关闭模态框
+        function closeAddModal() {
+            document.getElementById('addTeaPlantModal').classList.add('hidden');
+            document.getElementById('addTeaPlantForm').reset();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editTeaPlantModal').classList.add('hidden');
+            document.getElementById('editTeaPlantForm').reset();
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewTeaPlantModal').classList.add('hidden');
+        }
+
+        function closeGrowthAnalysisModal() {
+            document.getElementById('growthAnalysisModal').classList.add('hidden');
+        }
+
+        // 生长阶段切换功能
+        function switchGrowthStage(stage) {
+            // 隐藏所有阶段内容
+            const allStages = document.querySelectorAll('[id$="-stage"]');
+            allStages.forEach(stageDiv => {
+                stageDiv.style.display = 'none';
+            });
+            
+            // 显示选中的阶段
+            const targetStage = document.getElementById(stage + '-stage');
+            if (targetStage) {
+                targetStage.style.display = 'block';
+            }
+            
+            // 更新按钮状态
+            const buttons = document.querySelectorAll('#stage-buttons button');
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-green-600', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+            });
+            
+            // 激活当前按钮
+            const activeButton = document.querySelector(`[data-stage="${stage}"]`);
+            if (activeButton) {
+                activeButton.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                activeButton.classList.add('bg-green-600', 'text-white');
+            }
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
+            
+            // 为所有阶段按钮添加点击事件监听器
+            const buttons = document.querySelectorAll('#stage-buttons button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const stage = this.getAttribute('data-stage');
+                    switchGrowthStage(stage);
+                });
+            });
+            
+            // 默认显示幼苗期
+            switchGrowthStage('seedling');
+        });
+
+        // 点击模态框外部关闭
+        window.addEventListener('click', function(event) {
+            const addModal = document.getElementById('addTeaPlantModal');
+            const editModal = document.getElementById('editTeaPlantModal');
+            const viewModal = document.getElementById('viewTeaPlantModal');
+            const growthAnalysisModal = document.getElementById('growthAnalysisModal');
+            
+            if (event.target === addModal) {
+                closeAddModal();
+            }
+            if (event.target === editModal) {
+                closeEditModal();
+            }
+            if (event.target === viewModal) {
+                closeViewModal();
+            }
+            if (event.target === growthAnalysisModal) {
+                closeGrowthAnalysisModal();
+            }
+        });
+    </script>
+</body>
+</html>
+    

@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>茶叶生长模型系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 导航栏 -->
+    <nav class="bg-green-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-leaf text-2xl"></i>
+                <h1 class="text-xl font-bold">茶叶生长模型系统</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="/" class="hover:text-green-200 transition-colors duration-300 font-medium">首页</a>
+                <a href="/tea-plants" class="hover:text-green-200 transition-colors duration-300">茶树管理</a>
+                <a href="/environmental-data" class="hover:text-green-200 transition-colors duration-300">环境监测</a>
+                <a href="/growth-model" class="hover:text-green-200 transition-colors duration-300">生长模型</a>
+                <a href="/weather-warning" class="hover:text-green-200 transition-colors duration-300">天气预警</a>
+                <a href="/fertilizer-recommendation" class="hover:text-green-200 transition-colors duration-300">施肥推荐</a>
+                <a href="/pest-management" class="hover:text-green-200 transition-colors duration-300">病虫害管理</a>
+            </div>
+            <button class="md:hidden text-white focus:outline-none">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 移动端菜单 -->
+    <div class="md:hidden bg-green-700 hidden">
+        <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+            <a href="/" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">首页</a>
+            <a href="/tea-plants" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">茶树管理</a>
+            <a href="/environmental-data" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">环境监测</a>
+            <a href="/growth-model" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">生长模型</a>
+            <a href="/weather-warning" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">天气预警</a>
+            <a href="/fertilizer-recommendation" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">施肥推荐</a>
+            <a href="/pest-management" class="text-white hover:bg-green-600 px-2 py-1 rounded transition-colors duration-300">病虫害管理</a>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 欢迎区域 -->
+        <section class="mb-12 text-center">
+            <h2 class="text-[clamp(1.8rem,4vw,2.8rem)] font-bold text-gray-800 mb-4">智慧茶园管理解决方案</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto text-lg">
+                基于先进的数据分析和人工智能技术，提供茶叶全生命周期的监测、分析和决策支持，
+                助力茶园精细化管理，提高茶叶品质和产量。
+            </p>
+        </section>
+
+        <!-- 数据概览卡片 -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div class="bg-white rounded-xl shadow-md p-6 transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">茶树总数</h3>
+                    <i class="fa fa-tree text-green-600 text-2xl"></i>
+                </div>
+                <p class="text-3xl font-bold text-gray-800" id="total-plants">0</p>
+                <p class="text-sm text-green-600 mt-2" id="total-plants-mom"><i class="fa fa-arrow-up"></i> 较上月增长 -</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">平均生长指数</h3>
+                    <i class="fa fa-line-chart text-blue-600 text-2xl"></i>
+                </div>
+                <p class="text-3xl font-bold text-gray-800" id="growth-index">0</p>
+                <p class="text-sm text-green-600 mt-2"><i class="fa fa-arrow-up"></i> 健康状态良好</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">病虫害风险</h3>
+                    <i class="fa fa-bug text-orange-600 text-2xl"></i>
+                </div>
+                <p class="text-3xl font-bold text-gray-800" id="pest-risk">0</p>
+                <p class="text-sm text-yellow-600 mt-2"><i class="fa fa-exclamation-circle"></i> 需要关注</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">天气预警</h3>
+                    <i class="fa fa-cloud text-purple-600 text-2xl"></i>
+                </div>
+                <p class="text-3xl font-bold text-gray-800" id="weather-alert">安全</p>
+                <p class="text-sm text-green-600 mt-2"><i class="fa fa-check-circle"></i> 未来7天无预警</p>
+            </div>
+        </section>
+
+        <!-- 主要功能区域 -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <!-- 左侧：环境数据图表 -->
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">环境数据趋势</h3>
+                    <div class="h-80">
+                        <canvas id="environment-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">茶树生长趋势</h3>
+                    <div class="h-80">
+                        <canvas id="growth-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：智能推荐和预警 -->
+            <div class="space-y-8">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fa fa-lightbulb-o text-yellow-500 mr-2"></i> 农事建议
+                    </h3>
+                    <div class="space-y-4" id="farm-suggestions">
+                        <div class="p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                            <p class="text-gray-700">根据土壤分析，建议在未来3天内补充磷肥，用量为2.5kg/亩</p>
+                        </div>
+                        <div class="p-3 bg-green-50 border-l-4 border-green-500 rounded">
+                            <p class="text-gray-700">茶树生长状况良好，继续保持当前灌溉频率</p>
+                        </div>
+                        <div class="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+                            <p class="text-gray-700">注意监测茶小绿叶蝉，未来一周发生风险中等</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fa fa-calendar-check-o text-green-600 mr-2"></i> 近期农事计划
+                    </h3>
+                    <div class="space-y-3" id="upcoming-activities">
+                        <div class="flex items-start p-2 border-b border-gray-100">
+                            <div class="bg-green-100 text-green-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+                                <i class="fa fa-tint"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">灌溉</p>
+                                <p class="text-sm text-gray-500">明天 08:00-10:00</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start p-2 border-b border-gray-100">
+                            <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+                                <i class="fa fa-pagelines"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">修剪</p>
+                                <p class="text-sm text-gray-500">3天后</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start p-2">
+                            <div class="bg-yellow-100 text-yellow-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+                                <i class="fa fa-shield"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">病虫害防治</p>
+                                <p class="text-sm text-gray-500">5天后</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="view-full-plan-btn" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors duration-300">
+                        查看完整计划
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 功能模块入口 -->
+        <section class="mb-12">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6">功能模块</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <a href="/growth-model" class="block group">
+                    <div class="bg-white rounded-xl shadow-md p-6 h-full transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group-hover:border-green-500 border-2 border-transparent">
+                        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-600 transition-colors duration-300">
+                            <i class="fa fa-area-chart text-2xl text-green-600 group-hover:text-white transition-colors duration-300"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-2">生长模型分析</h4>
+                        <p class="text-gray-600">对茶叶全生命周期生物特征进行汇总分析，可视化展示各生长阶段数据。</p>
+                    </div>
+                </a>
+                
+                <a href="/weather-warning" class="block group">
+                    <div class="bg-white rounded-xl shadow-md p-6 h-full transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group-hover:border-blue-500 border-2 border-transparent">
+                        <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors duration-300">
+                            <i class="fa fa-bolt text-2xl text-blue-600 group-hover:text-white transition-colors duration-300"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-2">极端天气预警</h4>
+                        <p class="text-gray-600">基于环境监测数据，预测极端天气事件，提前做好防范准备。</p>
+                    </div>
+                </a>
+                
+                <a href="/fertilizer-recommendation" class="block group">
+                    <div class="bg-white rounded-xl shadow-md p-6 h-full transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group-hover:border-yellow-500 border-2 border-transparent">
+                        <div class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-yellow-600 transition-colors duration-300">
+                            <i class="fa fa-flask text-2xl text-yellow-600 group-hover:text-white transition-colors duration-300"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-2">智能施肥推荐</h4>
+                        <p class="text-gray-600">根据土壤养分状况和茶树需求，精准推荐施肥种类、用量和时期。</p>
+                    </div>
+                </a>
+                
+                <a href="/pest-management" class="block group">
+                    <div class="bg-white rounded-xl shadow-md p-6 h-full transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group-hover:border-red-500 border-2 border-transparent">
+                        <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-red-600 transition-colors duration-300">
+                            <i class="fa fa-bug text-2xl text-red-600 group-hover:text-white transition-colors duration-300"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-2">病虫害监测预警</h4>
+                        <p class="text-gray-600">基于图像识别和气象数据分析，提前预警病虫害发生风险。</p>
+                    </div>
+                </a>
+                
+                <a href="/agricultural-activities/1" class="block group">
+                    <div class="bg-white rounded-xl shadow-md p-6 h-full transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group-hover:border-purple-500 border-2 border-transparent">
+                        <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-purple-600 transition-colors duration-300">
+                            <i class="fa fa-tasks text-2xl text-purple-600 group-hover:text-white transition-colors duration-300"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-2">农事活动管理</h4>
+                        <p class="text-gray-600">记录和分析全生命周期标准农事操作，生成最佳管理方案。</p>
+                    </div>
+                </a>
+                
+                <a href="/environmental-data" class="block group">
+                    <div class="bg-white rounded-xl shadow-md p-6 h-full transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group-hover:border-teal-500 border-2 border-transparent">
+                        <div class="w-14 h-14 bg-teal-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-teal-600 transition-colors duration-300">
+                            <i class="fa fa-cloud text-2xl text-teal-600 group-hover:text-white transition-colors duration-300"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-2">环境数据监测</h4>
+                        <p class="text-gray-600">实时监测和分析气象、土壤等环境数据，为决策提供支持。</p>
+                    </div>
+                </a>
+                
+                <a href="/tea-plants" class="block group">
+                    <div class="bg-white rounded-xl shadow-md p-6 h-full transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group-hover:border-orange-500 border-2 border-transparent">
+                        <div class="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-orange-600 transition-colors duration-300">
+                            <i class="fa fa-tint text-2xl text-orange-600 group-hover:text-white transition-colors duration-300"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-2">施肥记录管理</h4>
+                        <p class="text-gray-600">详细记录每次施肥的时间、类型、用量等信息，科学管理施肥历史。</p>
+                    </div>
+                </a>
+                
+                <a href="/tea-plants" class="block group">
+                    <div class="bg-white rounded-xl shadow-md p-6 h-full transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group-hover:border-indigo-500 border-2 border-transparent">
+                        <div class="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-indigo-600 transition-colors duration-300">
+                            <i class="fa fa-calendar-check-o text-2xl text-indigo-600 group-hover:text-white transition-colors duration-300"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-2">智能农事计划</h4>
+                        <p class="text-gray-600">根据茶树生长阶段、季节和环境条件，智能生成详细的农事活动计划。</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fa fa-leaf mr-2"></i>茶叶生长模型系统
+                    </h3>
+                    <p class="text-gray-400">
+                        利用先进的数据分析和人工智能技术，为茶园管理提供全方位的智能解决方案，
+                        助力茶叶产业高质量发展。
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">快速链接</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white transition-colors duration-300">首页</a></li>
+                        <li><a href="/growth-model" class="text-gray-400 hover:text-white transition-colors duration-300">生长模型</a></li>
+                        <li><a href="/weather-warning" class="text-gray-400 hover:text-white transition-colors duration-300">天气预警</a></li>
+                        <li><a href="/fertilizer-recommendation" class="text-gray-400 hover:text-white transition-colors duration-300">施肥推荐</a></li>
+                        <li><a href="/pest-management" class="text-gray-400 hover:text-white transition-colors duration-300">病虫害管理</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">联系我们</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-envelope mr-2"></i> contact@teagrowthsystem.com
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-phone mr-2"></i> +86 123 4567 8910
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fa fa-map-marker mr-2"></i> 中国茶叶研究所
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500">
+                <p>&copy; 2023 茶叶生长模型系统 版权所有</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 移动端菜单切换
+        document.querySelector('.fa-bars').parentElement.addEventListener('click', function() {
+            document.querySelector('.md\\:hidden.bg-green-700').classList.toggle('hidden');
+        });
+
+        // 获取环境数据并绘制图表
+        fetch('/api/environmental-data?days=30')
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('environment-chart').getContext('2d');
+                
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.timestamps,
+                        datasets: [
+                            {
+                                label: '温度 (°C)',
+                                data: data.temperature,
+                                borderColor: '#FF6384',
+                                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                                tension: 0.3,
+                                fill: false
+                            },
+                            {
+                                label: '湿度 (%)',
+                                data: data.humidity,
+                                borderColor: '#36A2EB',
+                                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                                tension: 0.3,
+                                fill: false
+                            },
+                            {
+                                label: '土壤湿度 (%)',
+                                data: data.soil_moisture,
+                                borderColor: '#4BC0C0',
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                tension: 0.3,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false
+                            }
+                        },
+                        interaction: {
+                            mode: 'nearest',
+                            axis: 'x',
+                            intersect: false
+                        }
+                    }
+                });
+            });
+
+        // 获取生长数据并绘制图表
+        fetch('/api/growth-data/1')
+            .then(response => response.json())
+            .then(data => {
+                if (data.timestamps.length === 0) {
+                    // 如果没有数据，使用模拟数据
+                    data = {
+                        timestamps: ['2023-01', '2023-02', '2023-03', '2023-04', '2023-05', '2023-06'],
+                        heights: [10.2, 12.5, 15.8, 18.3, 21.7, 25.2],
+                        widths: [15.3, 18.7, 22.1, 25.6, 29.3, 33.5]
+                    };
+                }
+                
+                const ctx = document.getElementById('growth-chart').getContext('2d');
+                
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.timestamps,
+                        datasets: [
+                            {
+                                label: '高度 (cm)',
+                                data: data.heights,
+                                borderColor: '#2ECC71',
+                                backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            },
+                            {
+                                label: '宽度 (cm)',
+                                data: data.widths,
+                                borderColor: '#9B59B6',
+                                backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '尺寸 (cm)'
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+        // 获取天气预警数据
+        fetch('/api/weather-stress')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('weather-alert').textContent = data.warning ? '预警' : '安全';
+                document.getElementById('weather-alert').className = `text-3xl font-bold ${data.warning ? 'text-red-600' : 'text-green-600'}`;
+            });
+
+        // 获取病虫害风险数据
+        fetch('/api/pest-risk')
+            .then(response => response.json())
+            .then(data => {
+                const avgRisk = data.pests.reduce((sum, pest) => sum + pest.risk, 0) / data.pests.length;
+                document.getElementById('pest-risk').textContent = avgRisk.toFixed(1);
+            });
+
+        // 获取茶树总数（基于后端概览API）
+        fetch('/api/tea-garden-overview')
+            .then(res => res.json())
+            .then(data => {
+                if (!data || data.error) return;
+                const totalEl = document.getElementById('total-plants');
+                const momEl = document.getElementById('total-plants-mom');
+                totalEl.textContent = data.total ?? 0;
+                const mom = Number(data.mom_growth_percent || 0);
+                momEl.innerHTML = `${mom >= 0 ? '<i class=\"fa fa-arrow-up\"></i>' : '<i class=\"fa fa-arrow-down\"></i>'} 较上月${mom >= 0 ? '增长' : '下降'} ${Math.abs(mom).toFixed(1)}%`;
+                momEl.className = `text-sm mt-2 ${mom >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            })
+            .catch(() => {});
+
+        // 模拟生长指数
+        document.getElementById('growth-index').textContent = (Math.random() * 3 + 7).toFixed(1);
+
+        // 查看完整计划功能
+        document.getElementById('view-full-plan-btn').addEventListener('click', function() {
+            showFullPlanModal();
+        });
+
+        function showFullPlanModal() {
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.id = 'full-plan-modal';
+            
+            const modalContent = `
+                <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-2xl font-bold text-gray-800 flex items-center">
+                                <i class="fa fa-calendar-check-o text-green-600 mr-3"></i>
+                                完整农事计划
+                            </h3>
+                            <button onclick="closeFullPlanModal()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                        <p class="text-gray-600 mt-2">基于当前茶树生长阶段和环境条件的智能农事安排</p>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- 本周计划 -->
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fa fa-calendar text-blue-600 mr-2"></i>
+                                本周计划 (${getCurrentWeek()})
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fa fa-tint text-blue-600 mr-2"></i>
+                                        <span class="font-semibold text-blue-800">灌溉管理</span>
+                                        <span class="ml-auto text-sm text-blue-600">明天 08:00</span>
+                                    </div>
+                                    <p class="text-blue-700 text-sm">根据土壤湿度监测，进行精准灌溉，确保茶树水分充足</p>
+                                </div>
+                                
+                                <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fa fa-pagelines text-green-600 mr-2"></i>
+                                        <span class="font-semibold text-green-800">修剪管理</span>
+                                        <span class="ml-auto text-sm text-green-600">3天后</span>
+                                    </div>
+                                    <p class="text-green-700 text-sm">去除病弱枝条，促进新芽萌发，保持树形美观</p>
+                                </div>
+                                
+                                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fa fa-shield text-yellow-600 mr-2"></i>
+                                        <span class="font-semibold text-yellow-800">病虫害防治</span>
+                                        <span class="ml-auto text-sm text-yellow-600">5天后</span>
+                                    </div>
+                                    <p class="text-yellow-700 text-sm">预防茶小绿叶蝉，使用生物农药进行防治</p>
+                                </div>
+                                
+                                <div class="bg-purple-50 border-l-4 border-purple-500 p-4 rounded-lg">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fa fa-flask text-purple-600 mr-2"></i>
+                                        <span class="font-semibold text-purple-800">施肥管理</span>
+                                        <span class="ml-auto text-sm text-purple-600">7天后</span>
+                                    </div>
+                                    <p class="text-purple-700 text-sm">补充氮磷钾复合肥，促进茶树生长</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 本月计划 -->
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fa fa-calendar-o text-green-600 mr-2"></i>
+                                本月计划 (${getCurrentMonth()})
+                            </h4>
+                            <div class="space-y-3">
+                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                                    <div class="flex-1">
+                                        <p class="font-medium">第1周：春季修剪和施肥</p>
+                                        <p class="text-sm text-gray-600">完成春季修剪，施用有机肥和复合肥</p>
+                                    </div>
+                                    <span class="text-sm text-gray-500">已完成</span>
+                                </div>
+                                
+                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                                    <div class="flex-1">
+                                        <p class="font-medium">第2周：病虫害监测和防治</p>
+                                        <p class="text-sm text-gray-600">重点监测茶小绿叶蝉和茶毛虫</p>
+                                    </div>
+                                    <span class="text-sm text-gray-500">进行中</span>
+                                </div>
+                                
+                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-3 h-3 bg-gray-300 rounded-full mr-3"></div>
+                                    <div class="flex-1">
+                                        <p class="font-medium">第3周：灌溉系统维护</p>
+                                        <p class="text-sm text-gray-600">检查灌溉设备，确保系统正常运行</p>
+                                    </div>
+                                    <span class="text-sm text-gray-500">待进行</span>
+                                </div>
+                                
+                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-3 h-3 bg-gray-300 rounded-full mr-3"></div>
+                                    <div class="flex-1">
+                                        <p class="font-medium">第4周：土壤检测和改良</p>
+                                        <p class="text-sm text-gray-600">进行土壤养分检测，制定改良方案</p>
+                                    </div>
+                                    <span class="text-sm text-gray-500">待进行</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 季度计划 -->
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fa fa-calendar text-orange-600 mr-2"></i>
+                                季度计划
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="text-center p-4 bg-orange-50 rounded-lg">
+                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <i class="fa fa-seedling text-orange-600 text-xl"></i>
+                                    </div>
+                                    <h5 class="font-semibold text-orange-800 mb-2">春季管理</h5>
+                                    <p class="text-sm text-orange-700">修剪、施肥、病虫害防治</p>
+                                </div>
+                                
+                                <div class="text-center p-4 bg-green-50 rounded-lg">
+                                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <i class="fa fa-leaf text-green-600 text-xl"></i>
+                                    </div>
+                                    <h5 class="font-semibold text-green-800 mb-2">夏季管理</h5>
+                                    <p class="text-sm text-green-700">灌溉、遮阳、病虫害监测</p>
+                                </div>
+                                
+                                <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <i class="fa fa-tree text-yellow-600 text-xl"></i>
+                                    </div>
+                                    <h5 class="font-semibold text-yellow-800 mb-2">秋季管理</h5>
+                                    <p class="text-sm text-yellow-700">修剪、施肥、越冬准备</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 年度计划概览 -->
+                        <div>
+                            <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fa fa-calendar text-red-600 mr-2"></i>
+                                年度计划概览
+                            </h4>
+                            <div class="bg-gradient-to-r from-green-100 to-blue-100 p-4 rounded-lg">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h5 class="font-semibold text-gray-800 mb-2">主要目标</h5>
+                                        <ul class="text-sm text-gray-700 space-y-1">
+                                            <li>• 提高茶叶产量15%</li>
+                                            <li>• 改善茶叶品质等级</li>
+                                            <li>• 降低病虫害发生率</li>
+                                            <li>• 优化水资源利用</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-semibold text-gray-800 mb-2">关键指标</h5>
+                                        <ul class="text-sm text-gray-700 space-y-1">
+                                            <li>• 茶树成活率 > 95%</li>
+                                            <li>• 病虫害发生率 < 5%</li>
+                                            <li>• 茶叶品质等级提升</li>
+                                            <li>• 节水效率提升20%</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 border-t border-gray-200 bg-gray-50">
+                        <div class="flex justify-between items-center">
+                            <div class="flex space-x-2">
+                                <button onclick="exportPlan()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-300">
+                                    <i class="fa fa-download mr-2"></i>导出计划
+                                </button>
+                                <button onclick="printPlan()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-300">
+                                    <i class="fa fa-print mr-2"></i>打印计划
+                                </button>
+                            </div>
+                            <button onclick="closeFullPlanModal()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-300">
+                                关闭
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.innerHTML = modalContent;
+            document.body.appendChild(modal);
+            
+            // 添加点击背景关闭功能
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeFullPlanModal();
+                }
+            });
+        }
+
+        function closeFullPlanModal() {
+            const modal = document.getElementById('full-plan-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function exportPlan() {
+            const planContent = `
+茶园农事计划报告
+生成时间: ${new Date().toLocaleString('zh-CN')}
+
+一、本周计划
+- 灌溉管理：明天 08:00，根据土壤湿度监测进行精准灌溉
+- 修剪管理：3天后，去除病弱枝条，促进新芽萌发
+- 病虫害防治：5天后，预防茶小绿叶蝉，使用生物农药
+- 施肥管理：7天后，补充氮磷钾复合肥
+
+二、本月计划
+- 第1周：春季修剪和施肥（已完成）
+- 第2周：病虫害监测和防治（进行中）
+- 第3周：灌溉系统维护（待进行）
+- 第4周：土壤检测和改良（待进行）
+
+三、季度计划
+- 春季：修剪、施肥、病虫害防治
+- 夏季：灌溉、遮阳、病虫害监测
+- 秋季：修剪、施肥、越冬准备
+
+四、年度目标
+- 提高茶叶产量15%
+- 改善茶叶品质等级
+- 降低病虫害发生率
+- 优化水资源利用
+            `;
+            
+            const blob = new Blob([planContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `茶园农事计划_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('计划导出成功！', 'success');
+        }
+
+        function printPlan() {
+            window.print();
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function getCurrentWeek() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 1);
+            const days = Math.floor((now - start) / (24 * 60 * 60 * 1000));
+            const weekNumber = Math.ceil(days / 7);
+            return `第${weekNumber}周`;
+        }
+
+        function getCurrentMonth() {
+            const months = ['一月', '二月', '三月', '四月', '五月', '六月', 
+                           '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            return months[new Date().getMonth()];
+        }
+    </script>
+</body>
+</html>

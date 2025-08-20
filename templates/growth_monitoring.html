@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>茶树生长监测</title>
+</head>
+<body>
+    <h1>茶树生长监测 - {{ plant.variety }}</h1>
+    <p>品种: {{ plant.variety }}</p>
+    <p>种植日期: {{ plant.planting_date }}</p>
+    <p>当前阶段: {{ plant.current_stage }}</p>
+    <p>高度: {{ plant.height }} cm</p>
+    <p>冠幅: {{ plant.crown_width }} cm</p>
+    <p>叶片数量: {{ plant.leaf_count }}</p>
+
+    <h2>生长记录</h2>
+    <table border="1">
+        <tr>
+            <th>时间</th>
+            <th>阶段</th>
+            <th>高度</th>
+            <th>宽度</th>
+            <th>叶片状况</th>
+            <th>备注</th>
+        </tr>
+        {% for record in records %}
+        <tr>
+            <td>{{ record.timestamp }}</td>
+            <td>{{ record.stage }}</td>
+            <td>{{ record.height }}</td>
+            <td>{{ record.width }}</td>
+            <td>{{ record.leaf_condition }}</td>
+            <td>{{ record.notes }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

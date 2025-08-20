@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>农事计划管理 - 茶叶生长模型系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 导航栏 -->
+    <nav class="bg-green-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-leaf text-2xl"></i>
+                <h1 class="text-xl font-bold">茶叶生长模型系统</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="/" class="hover:text-green-200 transition-colors duration-300">首页</a>
+                <a href="/tea-plants" class="hover:text-green-200 transition-colors duration-300">茶树管理</a>
+                <a href="/environmental-data" class="hover:text-green-200 transition-colors duration-300">环境监测</a>
+                <a href="/growth-model" class="hover:text-green-200 transition-colors duration-300">生长模型</a>
+                <a href="/weather-warning" class="hover:text-green-200 transition-colors duration-300">天气预警</a>
+                <a href="/fertilizer-recommendation" class="hover:text-green-200 transition-colors duration-300">施肥推荐</a>
+                <a href="/pest-management" class="hover:text-green-200 transition-colors duration-300">病虫害管理</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <div class="mb-8">
+            <nav class="text-sm breadcrumbs mb-4">
+                <ol class="flex items-center space-x-2 text-gray-500">
+                    <li><a href="/" class="hover:text-green-600">首页</a></li>
+                    <li><i class="fa fa-chevron-right text-xs"></i></li>
+                    <li><a href="/tea-plants" class="hover:text-green-600">茶树管理</a></li>
+                    <li><i class="fa fa-chevron-right text-xs"></i></li>
+                    <li class="text-gray-700">农事计划</li>
+                </ol>
+            </nav>
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">农事计划管理</h1>
+                    <p class="text-gray-600 mt-2">茶树：{{ plant.variety }} ({{ plant.location_area }}-{{ plant.location_row }})</p>
+                </div>
+                <button id="generatePlanBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors duration-300 flex items-center space-x-2">
+                    <i class="fa fa-magic"></i>
+                    <span>生成智能计划</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">活跃计划</p>
+                        <p id="activePlans" class="text-2xl font-bold text-gray-800">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fa fa-calendar-check-o text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">待执行任务</p>
+                        <p id="pendingTasks" class="text-2xl font-bold text-gray-800">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <i class="fa fa-clock-o text-yellow-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">已完成任务</p>
+                        <p id="completedTasks" class="text-2xl font-bold text-gray-800">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fa fa-check-circle text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">本周任务</p>
+                        <p id="weeklyTasks" class="text-2xl font-bold text-gray-800">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fa fa-calendar text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 农事计划列表 -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">农事计划</h2>
+            </div>
+            
+            <div id="plansContainer">
+                <!-- 计划将通过JavaScript动态加载 -->
+            </div>
+        </div>
+    </main>
+
+    <!-- 生成计划模态框 -->
+    <div id="generatePlanModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-semibold text-gray-800">生成农事计划</h3>
+                        <button id="closeGenerateModal" class="text-gray-400 hover:text-gray-600 transition-colors duration-300">
+                            <i class="fa fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <form id="generatePlanForm" class="p-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">计划开始日期</label>
+                            <input type="date" id="startDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">计划结束日期</label>
+                            <input type="date" id="endDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">计划类型</label>
+                            <select id="planType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="常规管理">常规管理</option>
+                                <option value="季节性管理">季节性管理</option>
+                                <option value="特殊处理">特殊处理</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-4 mt-8">
+                        <button type="button" id="cancelGenerateBtn" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-300">
+                            取消
+                        </button>
+                        <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300">
+                            生成计划
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务详情模态框 -->
+    <div id="taskDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-90vh overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-semibold text-gray-800">任务详情</h3>
+                        <button id="closeTaskModal" class="text-gray-400 hover:text-gray-600 transition-colors duration-300">
+                            <i class="fa fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="taskDetailContent" class="p-6">
+                    <!-- 任务详情将通过JavaScript动态加载 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const plantId = parseInt('{{ plant.id }}');
+        let plans = [];
+
+        // 页面加载时获取数据
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAgriculturalPlans();
+            
+            // 设置默认日期
+            const today = new Date();
+            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+            document.getElementById('startDate').value = today.toISOString().split('T')[0];
+            document.getElementById('endDate').value = nextMonth.toISOString().split('T')[0];
+        });
+
+        // 加载农事计划
+        async function loadAgriculturalPlans() {
+            try {
+                const response = await fetch(`/api/agricultural-plans/${plantId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    plans = data.plans;
+                    updateStatistics();
+                    renderPlans();
+                } else {
+                    console.error('加载农事计划失败:', data.error);
+                }
+            } catch (error) {
+                console.error('网络错误:', error);
+            }
+        }
+
+        // 更新统计信息
+        function updateStatistics() {
+            const activePlans = plans.filter(plan => plan.status === 'pending' || plan.status === 'in_progress').length;
+            document.getElementById('activePlans').textContent = activePlans;
+
+            let pendingTasks = 0;
+            let completedTasks = 0;
+            let weeklyTasks = 0;
+            
+            const oneWeekFromNow = new Date();
+            oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
+
+            plans.forEach(plan => {
+                plan.details.forEach(detail => {
+                    if (detail.status === 'pending') {
+                        pendingTasks++;
+                    } else if (detail.status === 'completed') {
+                        completedTasks++;
+                    }
+                    
+                    if (detail.scheduled_date) {
+                        const taskDate = new Date(detail.scheduled_date);
+                        if (taskDate <= oneWeekFromNow && taskDate >= new Date()) {
+                            weeklyTasks++;
+                        }
+                    }
+                });
+            });
+
+            document.getElementById('pendingTasks').textContent = pendingTasks;
+            document.getElementById('completedTasks').textContent = completedTasks;
+            document.getElementById('weeklyTasks').textContent = weeklyTasks;
+        }
+
+        // 渲染计划列表
+        function renderPlans() {
+            const container = document.getElementById('plansContainer');
+            
+            if (plans.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-gray-500">
+                        <i class="fa fa-calendar-plus-o text-4xl mb-4 block"></i>
+                        <p>暂无农事计划</p>
+                        <p class="text-sm mt-2">点击"生成智能计划"创建第一个计划</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = plans.map(plan => `
+                <div class="border-b border-gray-200 last:border-b-0">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">${plan.plan_type} - ${plan.season}</h3>
+                                <p class="text-gray-600 text-sm">
+                                    ${plan.plan_start_date} 至 ${plan.plan_end_date}
+                                </p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(plan.status)}">
+                                    ${getStatusText(plan.status)}
+                                </span>
+                                <button onclick="deletePlan(${plan.id})" class="text-red-600 hover:text-red-800 text-sm">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            ${plan.details.map(detail => `
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center ${getActivityIconClass(detail.activity_type)}">
+                                            <i class="fa ${getActivityIcon(detail.activity_type)} text-white text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-gray-800">${detail.activity_type}</p>
+                                            <p class="text-sm text-gray-600">${detail.scheduled_date || '未安排'}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="px-2 py-1 rounded text-xs ${getTaskStatusClass(detail.status)}">
+                                            ${getStatusText(detail.status)}
+                                        </span>
+                                        <button onclick="showTaskDetail(${detail.id}, '${detail.activity_type}', '${detail.description}', '${detail.materials_needed}', '${detail.precautions}', '${detail.status}')" 
+                                                class="text-blue-600 hover:text-blue-800 text-sm">
+                                            <i class="fa fa-eye"></i>
+                                        </button>
+                                        <button onclick="updateTaskStatus(${detail.id}, '${detail.status === 'completed' ? 'pending' : 'completed'}')" 
+                                                class="text-green-600 hover:text-green-800 text-sm">
+                                            <i class="fa fa-check"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 获取状态样式类
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'pending': return 'bg-yellow-100 text-yellow-800';
+                case 'in_progress': return 'bg-blue-100 text-blue-800';
+                case 'completed': return 'bg-green-100 text-green-800';
+                case 'cancelled': return 'bg-gray-100 text-gray-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getTaskStatusClass(status) {
+            switch(status) {
+                case 'pending': return 'bg-yellow-100 text-yellow-700';
+                case 'in_progress': return 'bg-blue-100 text-blue-700';
+                case 'completed': return 'bg-green-100 text-green-700';
+                default: return 'bg-gray-100 text-gray-700';
+            }
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'pending': return '待执行';
+                case 'in_progress': return '进行中';
+                case 'completed': return '已完成';
+                case 'cancelled': return '已取消';
+                default: return '未知';
+            }
+        }
+
+        function getActivityIcon(activityType) {
+            switch(activityType) {
+                case '施肥': return 'fa-tint';
+                case '修剪': return 'fa-cut';
+                case '病虫害防治': return 'fa-shield';
+                case '灌溉': return 'fa-shower';
+                case '除草': return 'fa-leaf';
+                case '采摘': return 'fa-hand-rock-o';
+                default: return 'fa-tasks';
+            }
+        }
+
+        function getActivityIconClass(activityType) {
+            switch(activityType) {
+                case '施肥': return 'bg-green-500';
+                case '修剪': return 'bg-blue-500';
+                case '病虫害防治': return 'bg-red-500';
+                case '灌溉': return 'bg-cyan-500';
+                case '除草': return 'bg-yellow-500';
+                case '采摘': return 'bg-purple-500';
+                default: return 'bg-gray-500';
+            }
+        }
+
+        // 模态框控制
+        const generateModal = document.getElementById('generatePlanModal');
+        const generateBtn = document.getElementById('generatePlanBtn');
+        const closeGenerateBtn = document.getElementById('closeGenerateModal');
+        const cancelGenerateBtn = document.getElementById('cancelGenerateBtn');
+
+        generateBtn.addEventListener('click', () => {
+            generateModal.classList.remove('hidden');
+        });
+
+        [closeGenerateBtn, cancelGenerateBtn].forEach(btn => {
+            btn.addEventListener('click', () => {
+                generateModal.classList.add('hidden');
+            });
+        });
+
+        // 生成计划表单提交
+        document.getElementById('generatePlanForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                start_date: document.getElementById('startDate').value,
+                end_date: document.getElementById('endDate').value,
+                plan_type: document.getElementById('planType').value
+            };
+
+            try {
+                const response = await fetch(`/api/agricultural-plans/generate/${plantId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('农事计划生成成功！');
+                    generateModal.classList.add('hidden');
+                    loadAgriculturalPlans();
+                } else {
+                    alert('生成失败：' + result.error);
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+                console.error('Error:', error);
+            }
+        });
+
+        // 显示任务详情
+        function showTaskDetail(detailId, activityType, description, materialsNeeded, precautions, status) {
+            const modal = document.getElementById('taskDetailModal');
+            const content = document.getElementById('taskDetailContent');
+            
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">任务类型</h4>
+                        <p class="text-gray-600">${activityType}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">任务描述</h4>
+                        <p class="text-gray-600">${description}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">所需物料</h4>
+                        <p class="text-gray-600">${materialsNeeded}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">注意事项</h4>
+                        <p class="text-gray-600">${precautions}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">当前状态</h4>
+                        <span class="px-3 py-1 rounded-full text-sm ${getTaskStatusClass(status)}">
+                            ${getStatusText(status)}
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        // 关闭任务详情模态框
+        document.getElementById('closeTaskModal').addEventListener('click', () => {
+            document.getElementById('taskDetailModal').classList.add('hidden');
+        });
+
+        // 更新任务状态
+        async function updateTaskStatus(detailId, newStatus) {
+            try {
+                const response = await fetch(`/api/agricultural-plan-details/${detailId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: newStatus,
+                        completion_notes: newStatus === 'completed' ? '任务已完成' : ''
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    loadAgriculturalPlans();
+                } else {
+                    alert('更新失败：' + result.error);
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+                console.error('Error:', error);
+            }
+        }
+
+        // 删除计划
+        async function deletePlan(planId) {
+            if (!confirm('确定要删除这个农事计划吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/agricultural-plans/${planId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('计划删除成功！');
+                    loadAgriculturalPlans();
+                } else {
+                    alert('删除失败：' + result.error);
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

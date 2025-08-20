@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>茶树生长模型分析 - 茶树管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="{{ url_for('static', filename='tea-plant-selector.js') }}"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .feature-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .prediction-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .operation-card {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .model-controls {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .model-viewer {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        }
+        .environment-indicator {
+            position: absolute;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        .temperature-indicator { background: rgba(255, 99, 132, 0.8); }
+        .humidity-indicator { background: rgba(54, 162, 235, 0.8); }
+        .soil-indicator { background: rgba(255, 206, 86, 0.8); }
+        .nutrient-indicator { background: rgba(75, 192, 192, 0.8); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="gradient-bg text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold">🍃 茶树管理系统</h1>
+                    <span class="text-lg">| 生长模型分析</span>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/" class="hover:text-green-200 transition-colors">首页</a>
+                    <a href="/tea-plants" class="hover:text-green-200 transition-colors">茶树管理</a>
+                    <a href="/growth-model" class="hover:text-green-200 transition-colors">生长模型</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 茶树选择器 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">选择茶树进行分析</h3>
+                    <p class="text-gray-500 text-sm">选择任意已记录的茶树进行详细生长分析和3D可视化</p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <select id="areaSelector" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="all">所有区域</option>
+                        <option value="A">A区</option>
+                        <option value="B">B区</option>
+                        <option value="C">C区</option>
+                        <option value="D">D区</option>
+                    </select>
+                    <select id="plantSelector" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="">选择茶树...</option>
+                    </select>
+                    <button id="refreshBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-300">
+                        <i class="fa fa-refresh mr-1"></i> 更新数据
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 茶树信息头部 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2" id="plantName">茶树 #<span id="plantId"></span></h2>
+                    <p class="text-gray-600" id="plantInfo">正在加载茶树信息...</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-bold text-green-600" id="healthScore">--</div>
+                    <div class="text-sm text-gray-500">健康评分</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D茶树模型可视化 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- 3D模型显示区域 -->
+                <div class="flex-1 relative">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        🌳 茶树3D生长模型
+                    </h3>
+                    <div id="3dModelContainer" class="model-viewer rounded-lg p-4 min-h-96 flex items-center justify-center relative">
+                        <div class="text-center text-white">
+                            <i class="fa fa-tree text-4xl mb-2"></i>
+                            <p>请选择茶树以显示3D模型</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 环境数据指示器 -->
+                    <div id="environmentIndicators" class="hidden">
+                        <div class="environment-indicator temperature-indicator" style="top: 20px; left: 20px;">
+                            温度: <span id="tempValue">--</span>°C
+                        </div>
+                        <div class="environment-indicator humidity-indicator" style="top: 20px; right: 20px;">
+                            湿度: <span id="humidityValue">--</span>%
+                        </div>
+                        <div class="environment-indicator soil-indicator" style="bottom: 20px; left: 20px;">
+                            土壤: <span id="soilValue">--</span>%
+                        </div>
+                        <div class="environment-indicator nutrient-indicator" style="bottom: 20px; right: 20px;">
+                            营养: <span id="nutrientValue">--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 3D模型控制面板 -->
+                <div class="lg:w-80">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">模型控制</h4>
+                    
+                    <!-- 视角控制 -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <h5 class="font-medium text-gray-700 mb-3">视角控制</h5>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="viewFront" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                                正面视图
+                            </button>
+                            <button id="viewSide" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                                侧面视图
+                            </button>
+                            <button id="viewTop" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                                俯视图
+                            </button>
+                            <button id="view3D" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                                3D视图
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 模型组件控制 -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <h5 class="font-medium text-gray-700 mb-3">显示组件</h5>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="showTrunk" checked class="mr-2">
+                                <span class="text-sm">树干</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="showCrown" checked class="mr-2">
+                                <span class="text-sm">树冠</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="showLeaves" checked class="mr-2">
+                                <span class="text-sm">叶片</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="showRoots" checked class="mr-2">
+                                <span class="text-sm">根系</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="showEnvironment" checked class="mr-2">
+                                <span class="text-sm">环境数据</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 生长动画控制 -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <h5 class="font-medium text-gray-700 mb-3">生长动画</h5>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-sm text-gray-600">动画进度</label>
+                                <input type="range" id="growthSlider" min="0" max="100" value="0" class="w-full">
+                                <div class="text-xs text-gray-500 text-center" id="growthProgress">0%</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="playAnimation" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm flex-1">
+                                    <i class="fa fa-play mr-1"></i> 播放
+                                </button>
+                                <button id="pauseAnimation" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-sm flex-1">
+                                    <i class="fa fa-pause mr-1"></i> 暂停
+                                </button>
+                                <button id="resetAnimation" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm flex-1">
+                                    <i class="fa fa-refresh mr-1"></i> 重置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 模型信息 -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-700 mb-3">模型信息</h5>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">树高:</span>
+                                <span id="modelHeight" class="font-medium">--</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">冠幅:</span>
+                                <span id="modelWidth" class="font-medium">--</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">叶片数:</span>
+                                <span id="modelLeafCount" class="font-medium">--</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">生长阶段:</span>
+                                <span id="modelStage" class="font-medium">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分析内容网格 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- 生长曲线对比分析 -->
+            <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    📈 生长曲线对比分析
+                </h3>
+                <div class="h-80">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 环境因素影响分析 -->
+            <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    🌡️ 环境因素影响分析
+                </h3>
+                <div class="h-80">
+                    <canvas id="environmentChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 生物特征分析 -->
+            <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    🧬 生物特征分析
+                </h3>
+                <div class="h-80">
+                    <canvas id="biologicalChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 生长预测分析 -->
+            <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    🔮 生长预测分析
+                </h3>
+                <div class="h-80">
+                    <canvas id="predictionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 农事操作建议 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mt-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                🚜 农事操作建议
+            </h3>
+            <div id="agriculturalOperations" class="space-y-4">
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fa fa-leaf text-4xl mb-2"></i>
+                    <p>请选择茶树以查看农事操作建议</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let teaPlantSelector = null;
+        let current3DModel = null;
+        let animationInterval = null;
+        let currentAnimationFrame = 0;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，开始初始化茶树选择器...');
+            initTeaPlantSelector();
+        });
+
+        // 茶树选择器初始化
+        function initTeaPlantSelector() {
+            try {
+                teaPlantSelector = new TeaPlantSelector({
+                    onPlantChange: function(plantId) {
+                        console.log('茶树选择变化:', plantId);
+                        if (plantId) {
+                            loadPlantAnalysis(plantId);
+                            load3DModel(plantId);
+                        } else {
+                            clearPlantAnalysis();
+                            clear3DModel();
+                        }
+                    },
+                    onRefresh: function() {
+                        console.log('刷新茶树数据...');
+                        if (teaPlantSelector && teaPlantSelector.currentPlantId) {
+                            loadPlantAnalysis(teaPlantSelector.currentPlantId);
+                            load3DModel(teaPlantSelector.currentPlantId);
+                        } else {
+                            // 如果没有选中的茶树，重新加载茶树列表
+                            teaPlantSelector.refreshTeaPlants();
+                        }
+                    }
+                });
+                
+                console.log('茶树选择器初始化成功');
+            } catch (error) {
+                console.error('茶树选择器初始化失败:', error);
+                // 显示错误信息
+                showErrorMessage('茶树选择器初始化失败，请刷新页面重试');
+            }
+        }
+
+        // 显示错误信息
+        function showErrorMessage(message) {
+            const container = document.getElementById('3dModelContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div class="text-center text-white">
+                        <i class="fa fa-exclamation-triangle text-4xl mb-2 text-red-400"></i>
+                        <p class="text-red-400">${message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 加载茶树分析数据
+        async function loadPlantAnalysis(plantId) {
+            try {
+                console.log('开始加载茶树分析数据:', plantId);
+                
+                // 显示加载状态
+                document.getElementById('plantId').textContent = '加载中...';
+                document.getElementById('plantName').textContent = '茶树 #加载中...';
+                document.getElementById('plantInfo').textContent = '正在加载茶树信息...';
+                
+                // 加载基本信息
+                const plantResponse = await fetch(`/api/tea-plants/${plantId}`);
+                if (!plantResponse.ok) {
+                    throw new Error(`HTTP error! status: ${plantResponse.status}`);
+                }
+                
+                const plantData = await plantResponse.json();
+                
+                if (plantData.error) {
+                    console.error('加载茶树信息失败:', plantData.error);
+                    showErrorMessage(`加载茶树信息失败: ${plantData.error}`);
+                    return;
+                }
+                
+                console.log('茶树基本信息加载成功:', plantData);
+                
+                // 更新茶树信息
+                document.getElementById('plantId').textContent = plantData.plant.id;
+                document.getElementById('plantName').textContent = `茶树 #${plantData.plant.id} - ${plantData.plant.variety}`;
+                
+                const location = plantData.plant.location_area && plantData.plant.location_row 
+                    ? `${plantData.plant.location_area}区${plantData.plant.location_row}` 
+                    : (plantData.plant.location || '未知位置');
+                document.getElementById('plantInfo').textContent = 
+                    `${location} | ${plantData.plant.current_stage} | 树高: ${plantData.plant.height}m | 冠幅: ${plantData.plant.crown_width}m`;
+                
+                // 加载生长分析数据
+                await loadGrowthAnalysis(plantId);
+                
+                // 加载农事操作建议
+                await loadAgriculturalOperations(plantId);
+                
+            } catch (error) {
+                console.error('加载茶树分析失败:', error);
+                showErrorMessage(`加载茶树分析失败: ${error.message}`);
+            }
+        }
+
+        // 清除茶树分析数据
+        function clearPlantAnalysis() {
+            document.getElementById('plantId').textContent = '';
+            document.getElementById('plantName').textContent = '茶树 #--';
+            document.getElementById('plantInfo').textContent = '请选择茶树进行分析';
+            
+            // 清除其他相关数据
+            clearGrowthAnalysis();
+            clearAgriculturalOperations();
+        }
+
+        // 清除生长分析数据
+        function clearGrowthAnalysis() {
+            // 清除生长分析相关的图表和数据
+            const containers = ['growthAnalysis', 'biologicalFeatures', 'growthPrediction'];
+            containers.forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="fa fa-chart-line text-4xl mb-2"></i>
+                            <p>请选择茶树以查看生长分析</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // 清除农事操作数据
+        function clearAgriculturalOperations() {
+            const container = document.getElementById('agriculturalOperations');
+            if (container) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fa fa-leaf text-4xl mb-2"></i>
+                        <p>请选择茶树以查看农事操作建议</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 3D模型相关功能
+        async function load3DModel(plantId) {
+            try {
+                console.log('开始加载3D模型:', plantId);
+                
+                // 显示加载状态
+                const container = document.getElementById('3dModelContainer');
+                container.innerHTML = `
+                    <div class="text-center text-white">
+                        <i class="fa fa-spinner fa-spin text-4xl mb-2"></i>
+                        <p>正在加载3D模型...</p>
+                    </div>
+                `;
+                
+                const response = await fetch(`/api/tea-plants/${plantId}/3d-model`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('加载3D模型失败:', data.error);
+                    showErrorMessage(`加载3D模型失败: ${data.error}`);
+                    return;
+                }
+                
+                console.log('3D模型数据加载成功:', data);
+                
+                current3DModel = data;
+                render3DModel(data);
+                updateModelInfo(data);
+                setupModelControls();
+                updateEnvironmentIndicators(data);
+                
+            } catch (error) {
+                console.error('加载3D模型失败:', error);
+                showErrorMessage(`加载3D模型失败: ${error.message}`);
+            }
+        }
+
+        // 清除3D模型
+        function clear3DModel() {
+            const container = document.getElementById('3dModelContainer');
+            container.innerHTML = `
+                <div class="text-center text-white">
+                    <i class="fa fa-tree text-4xl mb-2"></i>
+                    <p>请选择茶树以显示3D模型</p>
+                </div>
+            `;
+            
+            current3DModel = null;
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            
+            // 隐藏环境指示器
+            document.getElementById('environmentIndicators').classList.add('hidden');
+        }
+
+        // 加载生长分析数据
+        async function loadGrowthAnalysis(plantId) {
+            try {
+                console.log('开始加载生长分析数据:', plantId);
+                
+                // 这里可以添加加载生长分析数据的逻辑
+                // 例如：加载生长曲线、生物特征等
+                
+            } catch (error) {
+                console.error('加载生长分析失败:', error);
+            }
+        }
+
+        // 加载农事操作建议
+        async function loadAgriculturalOperations(plantId) {
+            try {
+                console.log('开始加载农事操作建议:', plantId);
+                
+                // 这里可以添加加载农事操作建议的逻辑
+                
+            } catch (error) {
+                console.error('加载农事操作建议失败:', error);
+            }
+        }
+
+        // 渲染3D模型 - 使用更真实的茶树几何形状
+        function render3DModel(data) {
+            const container = document.getElementById('3dModelContainer');
+            
+            // 生成更真实的茶树3D模型数据
+            const traces = [];
+            
+            // 树干 - 使用圆柱体形状
+            if (data.model_data.trunk.points.length > 0) {
+                const trunkTrace = {
+                    x: data.model_data.trunk.points.map(p => p[0]),
+                    y: data.model_data.trunk.points.map(p => p[1]),
+                    z: data.model_data.trunk.points.map(p => p[2]),
+                    mode: 'markers',
+                    type: 'scatter3d',
+                    name: '树干',
+                    marker: {
+                        size: 4,
+                        color: '#8B4513',
+                        opacity: 0.9,
+                        symbol: 'circle'
+                    }
+                };
+                traces.push(trunkTrace);
+            }
+            
+            // 树冠 - 使用椭圆形分层结构
+            if (data.model_data.crown.points.length > 0) {
+                const crownTrace = {
+                    x: data.model_data.crown.points.map(p => p[0]),
+                    y: data.model_data.crown.points.map(p => p[1]),
+                    z: data.model_data.crown.points.map(p => p[2]),
+                    mode: 'markers',
+                    type: 'scatter3d',
+                    name: '树冠',
+                    marker: {
+                        size: 5,
+                        color: '#228B22',
+                        opacity: 0.8,
+                        symbol: 'circle'
+                    }
+                };
+                traces.push(crownTrace);
+            }
+            
+            // 叶片 - 使用平面形状
+            if (data.model_data.leaves.points.length > 0) {
+                const leafTrace = {
+                    x: data.model_data.leaves.points.map(p => p[0]),
+                    y: data.model_data.leaves.points.map(p => p[1]),
+                    z: data.model_data.leaves.points.map(p => p[2]),
+                    mode: 'markers',
+                    type: 'scatter3d',
+                    name: '叶片',
+                    marker: {
+                        size: 3,
+                        color: '#32CD32',
+                        opacity: 0.7,
+                        symbol: 'diamond'
+                    }
+                };
+                traces.push(leafTrace);
+            }
+            
+            // 根系 - 使用分支结构
+            if (data.model_data.roots.points.length > 0) {
+                const rootTrace = {
+                    x: data.model_data.roots.points.map(p => p[0]),
+                    y: data.model_data.roots.points.map(p => p[1]),
+                    z: data.model_data.roots.points.map(p => p[2]),
+                    mode: 'markers',
+                    type: 'scatter3d',
+                    name: '根系',
+                    marker: {
+                        size: 4,
+                        color: '#654321',
+                        opacity: 0.8,
+                        symbol: 'circle'
+                    }
+                };
+                traces.push(rootTrace);
+            }
+            
+            // 添加环境数据可视化点
+            if (data.environmental_data && data.environmental_data.length > 0) {
+                const envTrace = {
+                    x: data.environmental_data.map((_, i) => Math.cos(i * 0.5) * 0.5),
+                    y: data.environmental_data.map((_, i) => Math.sin(i * 0.5) * 0.5),
+                    z: data.environmental_data.map((_, i) => 0.1),
+                    mode: 'markers',
+                    type: 'scatter3d',
+                    name: '环境监测点',
+                    marker: {
+                        size: 6,
+                        color: data.environmental_data.map(env => {
+                            // 根据温度着色
+                            if (env.temperature > 25) return '#FF6B6B'; // 高温红色
+                            if (env.temperature < 15) return '#4ECDC4'; // 低温蓝色
+                            return '#45B7D1'; // 适宜温度蓝色
+                        }),
+                        opacity: 0.6,
+                        symbol: 'star'
+                    }
+                };
+                traces.push(envTrace);
+            }
+            
+            const layout = {
+                scene: {
+                    xaxis: { 
+                        title: 'X轴 (m)', 
+                        range: [-2, 2],
+                        gridcolor: '#444',
+                        zerolinecolor: '#666'
+                    },
+                    yaxis: { 
+                        title: 'Y轴 (m)', 
+                        range: [-2, 2],
+                        gridcolor: '#444',
+                        zerolinecolor: '#666'
+                    },
+                    zaxis: { 
+                        title: 'Z轴 (m)', 
+                        range: [-1, 3],
+                        gridcolor: '#444',
+                        zerolinecolor: '#666'
+                    },
+                    camera: {
+                        eye: { x: 1.5, y: 1.5, z: 1.5 }
+                    },
+                    bgcolor: '#2c3e50'
+                },
+                margin: { l: 0, r: 0, b: 0, t: 0 },
+                showlegend: true,
+                legend: { 
+                    x: 0.1, 
+                    y: 0.9,
+                    bgcolor: 'rgba(255,255,255,0.8)',
+                    bordercolor: '#ccc'
+                },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)'
+            };
+            
+            Plotly.newPlot('3dModelContainer', traces, layout, {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+            });
+        }
+
+        // 更新环境数据指示器
+        function updateEnvironmentIndicators(data) {
+            if (data.environmental_data && data.environmental_data.length > 0) {
+                const latestEnv = data.environmental_data[0];
+                
+                document.getElementById('tempValue').textContent = latestEnv.temperature?.toFixed(1) || '--';
+                document.getElementById('humidityValue').textContent = latestEnv.humidity?.toFixed(1) || '--';
+                document.getElementById('soilValue').textContent = latestEnv.soil_moisture?.toFixed(1) || '--';
+                
+                // 计算营养指数
+                const nutrientIndex = ((latestEnv.nitrogen || 0) + (latestEnv.phosphorus || 0) + (latestEnv.potassium || 0)) / 3;
+                document.getElementById('nutrientValue').textContent = nutrientIndex.toFixed(1);
+                
+                document.getElementById('environmentIndicators').classList.remove('hidden');
+            }
+        }
+
+        // 更新模型信息
+        function updateModelInfo(data) {
+            document.getElementById('modelHeight').textContent = `${data.tea_plant_info.height}m`;
+            document.getElementById('modelWidth').textContent = `${data.tea_plant_info.crown_width}m`;
+            document.getElementById('modelLeafCount').textContent = data.tea_plant_info.leaf_count;
+            document.getElementById('modelStage').textContent = data.tea_plant_info.current_stage;
+        }
+
+        // 设置模型控制
+        function setupModelControls() {
+            // 视角控制
+            document.getElementById('viewFront').addEventListener('click', () => {
+                Plotly.relayout('3dModelContainer', {
+                    'scene.camera.eye': { x: 0, y: -2, z: 0 },
+                    'scene.camera.center': { x: 0, y: 0, z: 1 }
+                });
+            });
+            
+            document.getElementById('viewSide').addEventListener('click', () => {
+                Plotly.relayout('3dModelContainer', {
+                    'scene.camera.eye': { x: -2, y: 0, z: 0 },
+                    'scene.camera.center': { x: 0, y: 0, z: 1 }
+                });
+            });
+            
+            document.getElementById('viewTop').addEventListener('click', () => {
+                Plotly.relayout('3dModelContainer', {
+                    'scene.camera.eye': { x: 0, y: 0, z: 2 },
+                    'scene.camera.center': { x: 0, y: 0, z: 1 }
+                });
+            });
+            
+            document.getElementById('view3D').addEventListener('click', () => {
+                Plotly.relayout('3dModelContainer', {
+                    'scene.camera.eye': { x: 1.5, y: 1.5, z: 1.5 },
+                    'scene.camera.center': { x: 0, y: 0, z: 1 }
+                });
+            });
+            
+            // 组件显示控制
+            const componentCheckboxes = ['showTrunk', 'showCrown', 'showLeaves', 'showRoots', 'showEnvironment'];
+            componentCheckboxes.forEach(id => {
+                document.getElementById(id).addEventListener('change', function() {
+                    updateModelVisibility();
+                });
+            });
+            
+            // 生长动画控制
+            const growthSlider = document.getElementById('growthSlider');
+            const playBtn = document.getElementById('playAnimation');
+            const pauseBtn = document.getElementById('pauseAnimation');
+            const resetBtn = document.getElementById('resetAnimation');
+            
+            growthSlider.addEventListener('input', function() {
+                document.getElementById('growthProgress').textContent = this.value + '%';
+                updateGrowthAnimation(this.value / 100);
+            });
+            
+            playBtn.addEventListener('click', function() {
+                startGrowthAnimation();
+            });
+            
+            pauseBtn.addEventListener('click', function() {
+                pauseGrowthAnimation();
+            });
+            
+            resetBtn.addEventListener('click', function() {
+                resetGrowthAnimation();
+            });
+        }
+
+        // 更新模型可见性
+        function updateModelVisibility() {
+            if (!current3DModel) return;
+            
+            const showTrunk = document.getElementById('showTrunk').checked;
+            const showCrown = document.getElementById('showCrown').checked;
+            const showLeaves = document.getElementById('showLeaves').checked;
+            const showRoots = document.getElementById('showRoots').checked;
+            const showEnvironment = document.getElementById('showEnvironment').checked;
+            
+            // 更新Plotly图表的可见性
+            const updates = [];
+            const indices = [];
+            
+            if (!showTrunk) indices.push(0);
+            if (!showCrown) indices.push(1);
+            if (!showLeaves) indices.push(2);
+            if (!showRoots) indices.push(3);
+            if (!showEnvironment && current3DModel.environmental_data) indices.push(4);
+            
+            if (indices.length > 0) {
+                Plotly.restyle('3dModelContainer', { visible: false }, indices);
+            }
+            
+            // 显示选中的组件
+            const visibleIndices = [];
+            if (showTrunk) visibleIndices.push(0);
+            if (showCrown) visibleIndices.push(1);
+            if (showLeaves) visibleIndices.push(2);
+            if (showRoots) visibleIndices.push(3);
+            if (showEnvironment && current3DModel.environmental_data) visibleIndices.push(4);
+            
+            if (visibleIndices.length > 0) {
+                Plotly.restyle('3dModelContainer', { visible: true }, visibleIndices);
+            }
+        }
+
+        // 开始生长动画
+        function startGrowthAnimation() {
+            if (animationInterval) return;
+            
+            const slider = document.getElementById('growthSlider');
+            let progress = parseInt(slider.value);
+            
+            animationInterval = setInterval(() => {
+                progress += 1;
+                if (progress > 100) {
+                    progress = 100;
+                    clearInterval(animationInterval);
+                    animationInterval = null;
+                }
+                
+                slider.value = progress;
+                document.getElementById('growthProgress').textContent = progress + '%';
+                updateGrowthAnimation(progress / 100);
+            }, 50); // 更快的动画速度
+        }
+
+        // 暂停生长动画
+        function pauseGrowthAnimation() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+        }
+
+        // 重置生长动画
+        function resetGrowthAnimation() {
+            pauseGrowthAnimation();
+            const slider = document.getElementById('growthSlider');
+            slider.value = 0;
+            document.getElementById('growthProgress').textContent = '0%';
+            updateGrowthAnimation(0);
+        }
+
+        // 更新生长动画 - 更复杂的动画效果
+        function updateGrowthAnimation(progress) {
+            if (!current3DModel) return;
+            
+            // 根据进度更新模型大小和形状
+            const heightScale = 0.3 + progress * 0.7;
+            const widthScale = 0.2 + progress * 0.8;
+            const leafScale = 0.1 + progress * 0.9;
+            
+            // 更新树干高度
+            if (current3DModel.model_data.trunk.points.length > 0) {
+                const trunkUpdates = {
+                    z: current3DModel.model_data.trunk.points.map(p => p[2] * heightScale)
+                };
+                Plotly.restyle('3dModelContainer', trunkUpdates, [0]);
+            }
+            
+            // 更新树冠大小
+            if (current3DModel.model_data.crown.points.length > 0) {
+                const crownUpdates = {
+                    x: current3DModel.model_data.crown.points.map(p => p[0] * widthScale),
+                    y: current3DModel.model_data.crown.points.map(p => p[1] * widthScale),
+                    z: current3DModel.model_data.crown.points.map(p => p[2] * heightScale)
+                };
+                Plotly.restyle('3dModelContainer', crownUpdates, [1]);
+            }
+            
+            // 更新叶片数量和大小
+            if (current3DModel.model_data.leaves.points.length > 0) {
+                const leafCount = Math.floor(current3DModel.model_data.leaves.points.length * leafScale);
+                const leafUpdates = {
+                    x: current3DModel.model_data.leaves.points.slice(0, leafCount).map(p => p[0] * widthScale),
+                    y: current3DModel.model_data.leaves.points.slice(0, leafCount).map(p => p[1] * widthScale),
+                    z: current3DModel.model_data.leaves.points.slice(0, leafCount).map(p => p[2] * heightScale)
+                };
+                Plotly.restyle('3dModelContainer', leafUpdates, [2]);
+            }
+        }
+
+        // 加载生长分析数据
+        async function loadGrowthAnalysis(plantId) {
+            try {
+                const response = await fetch(`/api/tea-plants/${plantId}/growth-analysis`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('加载生长分析失败:', data.error);
+                    return;
+                }
+                
+                // 更新健康评分
+                document.getElementById('healthScore').textContent = data.health_score || '--';
+                
+                // 创建图表
+                createGrowthChart(data);
+                createEnvironmentChart(data);
+                createBiologicalChart(data);
+                createPredictionChart(data);
+                
+            } catch (error) {
+                console.error('加载生长分析失败:', error);
+            }
+        }
+
+        // 加载农事操作建议
+        async function loadAgriculturalOperations(plantId) {
+            try {
+                const response = await fetch(`/api/tea-plants/${plantId}/agricultural-operations`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('加载农事操作失败:', data.error);
+                    return;
+                }
+                
+                displayAgriculturalOperations(data.operations);
+                
+            } catch (error) {
+                console.error('加载农事操作失败:', error);
+            }
+        }
+
+        // 显示农事操作建议
+        function displayAgriculturalOperations(operations) {
+            const container = document.getElementById('agriculturalOperations');
+            
+            if (!operations || operations.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fa fa-check-circle text-4xl mb-2"></i>
+                        <p>当前无需特殊农事操作</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = operations.map(op => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium ${
+                                    op.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                    op.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-green-100 text-green-800'
+                                }">${op.priority === 'high' ? '高优先级' : op.priority === 'medium' ? '中优先级' : '低优先级'}</span>
+                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${op.type}</span>
+                            </div>
+                            <h4 class="font-semibold text-gray-800 mb-2">${op.title}</h4>
+                            <p class="text-gray-600 text-sm mb-3">${op.description}</p>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-500">所需物料:</span>
+                                    <span class="font-medium">${op.materials}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">执行方法:</span>
+                                    <span class="font-medium">${op.method}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">执行频率:</span>
+                                    <span class="font-medium">${op.frequency}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">预计成本:</span>
+                                    <span class="font-medium">¥${op.estimated_cost}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 清除图表
+        function clearCharts() {
+            const chartIds = ['growthChart', 'environmentChart', 'biologicalChart', 'predictionChart'];
+            chartIds.forEach(id => {
+                const canvas = document.getElementById(id);
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            });
+        }
+
+        // 创建生长曲线图表
+        function createGrowthChart(data) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            
+            if (window.growthChart) {
+                window.growthChart.destroy();
+            }
+            
+            window.growthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.growth_data?.labels || [],
+                    datasets: [{
+                        label: '实际生长',
+                        data: data.growth_data?.actual || [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: '预测生长',
+                        data: data.growth_data?.predicted || [],
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderDash: [5, 5],
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '茶树生长曲线对比'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '高度 (m)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 创建环境因素图表
+        function createEnvironmentChart(data) {
+            const ctx = document.getElementById('environmentChart').getContext('2d');
+            
+            if (window.environmentChart) {
+                window.environmentChart.destroy();
+            }
+            
+            window.environmentChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['温度', '湿度', '土壤湿度', '土壤pH', '氮含量', '磷含量', '钾含量'],
+                    datasets: [{
+                        label: '当前环境',
+                        data: data.environment_data?.current || [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)'
+                    }, {
+                        label: '最适环境',
+                        data: data.environment_data?.optimal || [],
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '环境因素雷达图'
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // 创建生物特征图表
+        function createBiologicalChart(data) {
+            const ctx = document.getElementById('biologicalChart').getContext('2d');
+            
+            if (window.biologicalChart) {
+                window.biologicalChart.destroy();
+            }
+            
+            window.biologicalChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.biological_features?.labels || [],
+                    datasets: [{
+                        label: '特征值',
+                        data: data.biological_features?.values || [],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(139, 92, 246, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '生物特征分析'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // 创建预测图表
+        function createPredictionChart(data) {
+            const ctx = document.getElementById('predictionChart').getContext('2d');
+            
+            if (window.predictionChart) {
+                window.predictionChart.destroy();
+            }
+            
+            window.predictionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.growth_prediction?.labels || [],
+                    datasets: [{
+                        label: '高度预测',
+                        data: data.growth_prediction?.height || [],
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        yAxisID: 'y'
+                    }, {
+                        label: '产量预测',
+                        data: data.growth_prediction?.yield || [],
+                        borderColor: 'rgb(245, 158, 11)',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '生长预测分析'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '高度 (m)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '产量 (kg)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
